@@ -1,0 +1,11 @@
+# Create workspace definition file
+# This file defines the root of a pnpm monorepo (workspace) 
+# and tells pnpm which folders contain sub-projects or packages
+
+packages:
+  - "apps/*"      # Treats every folder inside /apps as an individual app (e.g. web, mobile, admin)
+  - "packages/*"  # Treats every folder inside /packages as a shared library (e.g. ui, config, utils)
+allowBuilds:
+  esbuild: true
+onlyBuiltDependencies:
+  - esbuild

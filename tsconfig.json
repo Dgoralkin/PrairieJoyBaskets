@@ -1,0 +1,8 @@
+/// Create root tsconfig.json
+/// Set global project rules and tells the TypeScript compiler (tsc) how to handle file indexing and builds.
+
+{
+  "private": true,
+  "compileOnSave": false,
+  "exclude": ["node_modules", "dist"]
+}

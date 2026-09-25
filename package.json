@@ -4,7 +4,8 @@
   "description": "Merci Baskets app is a cloud based MERN (Cloud SQL based) stack application for a web and mobile B2B/B2C platform.",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "turbo build"
   },
   "keywords": [],
   "author": "Daniel Gorelkin - Dgoralkin@Github",
@@ -12,7 +13,7 @@
   "devEngines": {
     "packageManager": {
       "name": "pnpm",
-      "version": "12.6.0",
+      "version": "9.0.0",
       "onFail": "download"
     }
   },

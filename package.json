@@ -1,7 +1,7 @@
 {
-  "name": "Merci_Baskets_app",
+  "name": "Prairie_Joy_Baskets_app",
   "version": "1.0.0",
-  "description": "Merci Baskets app is a cloud based MERN (Cloud SQL based) stack application for a web and mobile B2B/B2C platform.",
+  "description": "PJB app is a cloud based MERN (Cloud SQL based) stack application for a web and mobile B2B/B2C platform.",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"

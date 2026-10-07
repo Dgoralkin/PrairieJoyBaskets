@@ -5,6 +5,9 @@ FROM node:22-alpine AS builder
 
 WORKDIR /app
 
+# Upgrade OS packages in build stage to patch security vulnerabilities (e.g., CVE-2026-XXXXX)
+RUN apk update && apk upgrade --no-cache
+
 # Use the pnpm version required by the project
 RUN corepack enable && corepack prepare pnpm@12.6.0 --activate
 
@@ -39,6 +42,9 @@ RUN pnpm --filter web build
 # Stage 2: Production server
 # =========================
 FROM nginx:alpine
+
+# Upgrade runtime Alpine packages to clear CVE-2026-XXXXX and other OS vulnerabilities
+RUN apk update && apk upgrade --no-cache
 
 RUN rm -rf /usr/share/nginx/html/*
 

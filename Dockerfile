@@ -1,4 +1,9 @@
 # =========================
+# This file is used to containerize the React web application for deployment on Google Cloud Run via Docker.
+# It uses a multi-stage build to first build the React app and then serve it using Nginx. 
+# =========================
+
+# =========================
 # Stage 1: Build React app
 # =========================
 FROM node:22-alpine AS builder

@@ -40,3 +40,6 @@ images:
 
 options:
   logging: CLOUD_LOGGING_ONLY
+
+# Bind the predifined Cloud Build service account to the Cloud Run Invoker role for the deployed service.
+serviceAccount: 'projects/merci-509500/serviceAccounts/cloud-build-sa@merci-509500.iam.gserviceaccount.com'

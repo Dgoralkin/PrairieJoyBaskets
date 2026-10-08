@@ -10,7 +10,7 @@ steps:
       - 'build'
       - '-t'
       - 'northamerica-northeast1-docker.pkg.dev/merci-509500/pjb-arti-repo/prairiejoy-web:$COMMIT_SHA'
-      - '.'
+      - '.' # Use the current source directory as the Docker build context.
 
   # 2. Push image to Artifact Registry
   - name: 'gcr.io/cloud-builders/docker'

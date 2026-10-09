@@ -38,6 +38,7 @@ coverage/
 .vite/
 
 # IDEs & Code Editors
+.vscode
 .vscode/*
 !.vscode/extensions.json
 !.vscode/settings.json

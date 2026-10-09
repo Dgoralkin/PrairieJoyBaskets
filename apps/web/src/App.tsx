@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   Building2,
   Check,
@@ -15,7 +15,10 @@ import {
   Wand2,
   X,
 } from 'lucide-react';
+import { apiClient } from '@repo/api-client';
+import type { Basket, Category, CartItem, Zone, Addon } from '@repo/types';
 
+/*
 type Basket = {
   id: string;
   title: string;
@@ -159,6 +162,9 @@ const CATALOG_BASKETS: Basket[] = [
   },
 ];
 
+const filterOptions = ['All', 'Gourmet Food', 'Craft Drinks', 'Sweet Treats', 'Corporate', 'Self Care'];
+*/
+
 const CUSTOM_ADDONS: Addon[] = [
   { id: 'c1', name: 'Manitoba Wildflower Honey (250ml)', price: 12, category: 'Food' },
   { id: 'c2', name: 'Wolseley Artisan Strawberry Jam', price: 9, category: 'Food' },
@@ -178,9 +184,9 @@ const WINNIPEG_ZONES: Zone[] = [
   { id: 'z5', name: 'Outer Perimeter & Headingley', price: 18, estDays: '2-3 Business Days' },
 ];
 
-const filterOptions = ['All', 'Gourmet Food', 'Craft Drinks', 'Sweet Treats', 'Corporate', 'Self Care'];
-
 function App() {
+  const [baskets, setBaskets] = useState<Basket[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [selectedZone, setSelectedZone] = useState<Zone>(WINNIPEG_ZONES[0]);
   const [categoryFilter, setCategoryFilter] = useState<string>('All');
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -197,14 +203,16 @@ function App() {
     notes: '',
   });
   const [corpSubmitted, setCorpSubmitted] = useState(false);
+  const [isLoadingData, setIsLoadingData] = useState(true);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const filteredCatalog = useMemo(() => {
     if (categoryFilter === 'All') {
-      return CATALOG_BASKETS;
+      return baskets;
     }
 
-    return CATALOG_BASKETS.filter((basket) => basket.category === categoryFilter);
-  }, [categoryFilter]);
+    return baskets.filter((basket) => basket.category === categoryFilter);
+  }, [baskets, categoryFilter]);
 
   const addToCart = (item: Basket) => {
     setCart((prev) => {
@@ -252,6 +260,8 @@ function App() {
       contents: customItems.map((item) => item.name),
       isCustom: true,
       qty: 1,
+      categoryId: 'custom',
+      isActive: true,
     };
 
     setCart((prev) => [...prev, newCustomItem]);
@@ -260,6 +270,34 @@ function App() {
 
   const cartTotal = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
   const cartCount = cart.reduce((sum, item) => sum + item.qty, 0);
+
+  // Load categories & catalog baskets from Cloud SQL via API
+  useEffect(() => {
+    async function loadCatalog() {
+      try {
+        setIsLoadingData(true);
+        setErrorMsg(null);
+        const [catData, basketData] = await Promise.all([
+          apiClient.getCategories(),
+          apiClient.getBaskets(),
+        ]);
+        setCategories(catData);
+        setBaskets(basketData);
+      } catch (err: any) {
+        console.error('Error fetching catalog data:', err);
+        setErrorMsg('Unable to load gift baskets. Please check if the API and database are running.');
+      } finally {
+        setIsLoadingData(false);
+      }
+    }
+    loadCatalog();
+  }, []);
+
+  // Compute dynamic filterOptions array: ensure 'All' is first and not duplicated
+  const filterOptions = useMemo(() => {
+    const names = categories.map((c) => c.name);
+    return names.includes('All') ? names : ['All', ...names];
+  }, [categories]);
 
   return (
     <div className="flex min-h-screen flex-col bg-cream-50 text-slate-800 antialiased selection:bg-amber-100 selection:text-amber-900">
@@ -376,71 +414,82 @@ function App() {
           ))}
         </div>
 
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {filteredCatalog.map((basket) => (
-            <div key={basket.id} className="group flex flex-col overflow-hidden rounded-2xl border border-cream-200 bg-white shadow-sm transition hover:shadow-md">
-              <div className="relative aspect-4/3 overflow-hidden bg-cream-100">
-                <img
-                  src={basket.image}
-                  alt={basket.title}
-                  className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
-                  onError={(event) => {
-                    event.currentTarget.src = 'https://placehold.co/600x400/f4efe6/78350f?text=Winnipeg+Basket+Co.';
-                  }}
-                />
-                <div className="absolute left-3 top-3 flex flex-wrap gap-1">
-                  {basket.tags.map((tag) => (
-                    <span key={tag} className="rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-bold text-slate-800 shadow-sm backdrop-blur-sm">
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              <div className="flex flex-grow flex-col p-5">
-                <div className="mb-2 flex items-center justify-between gap-2">
-                  <span className="text-xs font-bold uppercase tracking-wider text-amber-800">{basket.category}</span>
-                  <div className="flex items-center gap-1 text-xs font-semibold text-slate-700">
-                    <Star className="h-3.5 w-3.5 fill-amber-500 text-amber-500" />
-                    <span>{basket.rating}</span>
-                    <span className="text-slate-400">({basket.reviews})</span>
-                  </div>
-                </div>
-
-                <h4 className="font-serif text-lg font-bold text-slate-900 transition group-hover:text-amber-800">
-                  {basket.title}
-                </h4>
-                <p className="mt-2 text-xs text-slate-600">{basket.description}</p>
-
-                <div className="mt-4 border-t border-cream-100 pt-3">
-                  <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-500">Includes:</p>
-                  <ul className="space-y-1 text-xs text-slate-600">
-                    {basket.contents.map((item, index) => (
-                      <li key={`${basket.id}-${index}`} className="flex items-center gap-1.5">
-                        <Check className="h-3 w-3 flex-shrink-0 text-amber-600" />
-                        <span className="truncate">{item}</span>
-                      </li>
+        {isLoadingData ? (
+          <div className="py-20 text-center text-slate-500">
+            <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-4 border-amber-600 border-t-transparent" />
+            <p className="font-medium">Loading prairie gift baskets...</p>
+          </div>
+        ) : errorMsg ? (
+          <div className="my-10 rounded-xl bg-red-50 p-6 text-center text-red-700">
+            <p>{errorMsg}</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {filteredCatalog.map((basket) => (
+              <div key={basket.id} className="group flex flex-col overflow-hidden rounded-2xl border border-cream-200 bg-white shadow-sm transition hover:shadow-md">
+                <div className="relative aspect-4/3 overflow-hidden bg-cream-100">
+                  <img
+                    src={basket.image}
+                    alt={basket.title}
+                    className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+                    onError={(event) => {
+                      event.currentTarget.src = 'https://placehold.co/600x400/f4efe6/78350f?text=Winnipeg+Basket+Co.';
+                    }}
+                  />
+                  <div className="absolute left-3 top-3 flex flex-wrap gap-1">
+                    {basket.tags.map((tag) => (
+                      <span key={tag} className="rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-bold text-slate-800 shadow-sm backdrop-blur-sm">
+                        {tag}
+                      </span>
                     ))}
-                  </ul>
+                  </div>
                 </div>
 
-                <div className="mt-auto flex items-center justify-between gap-2 pt-5">
-                  <div>
-                    <span className="block text-xs text-slate-400">Starting at</span>
-                    <span className="text-xl font-bold text-slate-900">${basket.price} CAD</span>
+                <div className="flex flex-grow flex-col p-5">
+                  <div className="mb-2 flex items-center justify-between gap-2">
+                    <span className="text-xs font-bold uppercase tracking-wider text-amber-800">{basket.category}</span>
+                    <div className="flex items-center gap-1 text-xs font-semibold text-slate-700">
+                      <Star className="h-3.5 w-3.5 fill-amber-500 text-amber-500" />
+                      <span>{basket.rating}</span>
+                      <span className="text-slate-400">({basket.reviews})</span>
+                    </div>
                   </div>
-                  <button
-                    onClick={() => addToCart(basket)}
-                    className="flex items-center gap-1.5 rounded-xl bg-amber-600 px-4 py-2.5 text-xs font-semibold text-white shadow-sm transition hover:bg-amber-700"
-                  >
-                    <Plus className="h-4 w-4" />
-                    Add to Cart
-                  </button>
+
+                  <h4 className="font-serif text-lg font-bold text-slate-900 transition group-hover:text-amber-800">
+                    {basket.title}
+                  </h4>
+                  <p className="mt-2 text-xs text-slate-600">{basket.description}</p>
+
+                  <div className="mt-4 border-t border-cream-100 pt-3">
+                    <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-500">Includes:</p>
+                    <ul className="space-y-1 text-xs text-slate-600">
+                      {basket.contents.map((item, index) => (
+                        <li key={`${basket.id}-${index}`} className="flex items-center gap-1.5">
+                          <Check className="h-3 w-3 flex-shrink-0 text-amber-600" />
+                          <span className="truncate">{item}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <div className="mt-auto flex items-center justify-between gap-2 pt-5">
+                    <div>
+                      <span className="block text-xs text-slate-400">Starting at</span>
+                      <span className="text-xl font-bold text-slate-900">${basket.price} CAD</span>
+                    </div>
+                    <button
+                      onClick={() => addToCart(basket)}
+                      className="flex items-center gap-1.5 rounded-xl bg-amber-600 px-4 py-2.5 text-xs font-semibold text-white shadow-sm transition hover:bg-amber-700"
+                    >
+                      <Plus className="h-4 w-4" />
+                      Add to Cart
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </main>
 
 

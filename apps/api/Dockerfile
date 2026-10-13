@@ -37,27 +37,31 @@ COPY apps/api ./apps/api
 COPY packages ./packages
 
 # Build the TypeScript source (produces ./dist)
-RUN pnpm --filter api run build   # assumes a "build" script defined in apps/api/package.json
+RUN pnpm --filter api run build
+
+# Use pnpm deploy to create a self-contained production bundle.
+# This resolves all workspace:* deps, copies only prod node_modules,
+# and requires no symlinks — safe to copy into a fresh image.
+RUN pnpm deploy --filter api --prod /deploy/api
+
+# Copy the compiled dist into the deploy bundle (deploy only copies node_modules + package.json)
+RUN cp -r /app/apps/api/dist /deploy/api/dist
 
 # -------------------------------------------------
 # Stage 2 – Runtime image (small, production-only)
 # -------------------------------------------------
 FROM node:22-alpine AS runtime
 
-# Create a non-root user for security (must be done before switching USER)
+# Create a non-root user
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 
 WORKDIR /app
 
-# Copy only the compiled output and the API's package.json from the builder
-COPY --from=builder /app/apps/api/dist ./dist
-COPY --from=builder /app/apps/api/package.json ./package.json
+# Copy the self-contained deploy bundle from the builder
+# Includes: dist/, node_modules/ (prod only, no symlinks), package.json
+COPY --from=builder /deploy/api .
 
-# Install ONLY production deps with plain npm (avoids broken pnpm symlinks from builder)
-# pnpm uses a virtual store with symlinks which break when copied to a fresh image
-RUN npm install --omit=dev --ignore-scripts
-
-# Drop to non-root user after installing dependencies
+# Drop to non-root user
 USER appuser
 
 # Expose the port Cloud Run expects (default 8080)
@@ -68,3 +72,4 @@ ENV PORT=8080
 
 # Start the API
 CMD ["node", "dist/index.js"]
+

@@ -8,6 +8,10 @@ steps:
   - name: 'gcr.io/cloud-builders/docker'
     args:
       - 'build'
+      # Pass the Cloud Run service URL as a build argument to the Docker build process. This allows
+      # the React application to know where to send API requests when deployed to Cloud Run.
+      - '--build-arg'
+      - 'VITE_API_URL=https://prairie-joy-baskets.cloud.run'
       - '-t'
       - 'northamerica-northeast1-docker.pkg.dev/merci-509500/pjb-arti-repo/prairiejoy-web:$COMMIT_SHA'
       - '.' # Use the current source directory as the Docker build context.

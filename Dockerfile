@@ -39,6 +39,10 @@ COPY apps/web/vite.config.ts ./apps/web/vite.config.ts
 # Copy shared packages source
 COPY packages ./packages
 
+# Get the API URL from the build argument (set in Cloud Run or defined in cloudbuild.yaml)
+ARG VITE_API_URL
+ENV VITE_API_URL=$VITE_API_URL
+
 # Build web app
 RUN pnpm --filter web build
 

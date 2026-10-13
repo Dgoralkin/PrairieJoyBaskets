@@ -25,5 +25,6 @@ export class PrairieJoyClient {
 }
 
 export const apiClient = new PrairieJoyClient(
-    (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_API_URL) || 'http://localhost:4000'
+    (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_API_URL) ||
+    (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:4000')
 );

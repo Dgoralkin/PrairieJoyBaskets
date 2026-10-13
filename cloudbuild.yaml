@@ -15,7 +15,7 @@ steps:
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     args: ['gcloud', 'run', 'deploy', 'prairiejoy-api', '--image', 'northamerica-northeast1-docker.pkg.dev/merci-509500/pjb-arti-repo/prairiejoy-api:$COMMIT_SHA', '--region', 'northamerica-northeast1', '--platform', 'managed', '--port', '8080', '--allow-unauthenticated']
 
-  # 1.2: Programmatically extract the live API URL from Cloud Run
+  # 1.2: Programmatically extract the live API URL from Cloud Run and inject it into the Docker build argument VITE_API_URL
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: 'bash'
     args:
@@ -37,8 +37,7 @@ steps:
         docker build \
           --build-arg VITE_API_URL="$$API_URL" \
           -t northamerica-northeast1-docker.pkg.dev/merci-509500/pjb-arti-repo/prairiejoy-web:$COMMIT_SHA \
-          -f apps/web/Dockerfile \
-          .
+          -f Dockerfile .
 
   # 2. Push image to Artifact Registry
   - name: 'gcr.io/cloud-builders/docker'

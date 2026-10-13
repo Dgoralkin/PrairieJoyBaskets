@@ -5,7 +5,7 @@ import type { Basket, Category } from '@repo/types';
 import { hostname } from 'os';
 
 const app = express();
-const port = Number(process.env.PORT) || 4000;
+const port = process.env.PORT || 8080;
 
 app.use(cors());
 app.use(express.json());
@@ -70,6 +70,6 @@ app.get('/api/v1/baskets', async (req, res) => {
     }
 });
 
-app.listen(port, () => {
-    console.log(`Frontend Prairie Joy Baskets API listening on ${hostname}:${port}`);
+app.listen(Number(port), '0.0.0.0', () => {
+    console.log(`Backend server Prairie Joy Baskets is listening on port ${port}`);
 });

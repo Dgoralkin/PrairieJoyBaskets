@@ -52,6 +52,10 @@ RUN cp -r /app/apps/api/dist /deploy/api/dist
 # -------------------------------------------------
 FROM node:22-alpine AS runtime
 
+# Patch OS-level CVEs (e.g. zlib CVE-2026-85091) in the runtime image.
+# The builder already does this, but the runtime is a fresh Alpine pull.
+RUN apk update && apk upgrade --no-cache && rm -rf /var/cache/apk/*
+
 # Create a non-root user
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 

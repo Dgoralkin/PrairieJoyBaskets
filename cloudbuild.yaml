@@ -21,9 +21,9 @@ steps:
     args:
       - '-c'
       - |
-        API_URL=$(gcloud run services describe prairiejoy-api --region=northamerica-northeast1 --format='value(status.url)')
-        echo "Extracted Backend API URL: $API_URL"
-        echo $API_URL > /workspace/api_url.txt
+        API_URL=$$(gcloud run services describe prairiejoy-api --region=northamerica-northeast1 --format='value(status.url)')
+        echo "Extracted Backend API URL: $$API_URL"
+        echo $$API_URL > /workspace/api_url.txt
 
   # 1.3 Build and deploy the Web Frontend (passing the backend URL from the api Backend!)
   - name: 'gcr.io/cloud-builders/docker'
@@ -33,9 +33,9 @@ steps:
     args:
       - '-c'
       - |
-        API_URL=$(cat /workspace/api_url.txt)
+        API_URL=$$(cat /workspace/api_url.txt)
         docker build \
-          --build-arg VITE_API_URL="$API_URL" \
+          --build-arg VITE_API_URL="$$API_URL" \
           -t northamerica-northeast1-docker.pkg.dev/merci-509500/pjb-arti-repo/prairiejoy-web:$COMMIT_SHA \
           -f apps/web/Dockerfile \
           .

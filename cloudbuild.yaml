@@ -1,10 +1,21 @@
 # =========================
 # This file is used to containerize the React web application for CI/CD pipeline deployment on Google Cloud Run via Cloud Build.
-# It uses a multi-stage build to first build the React app and then serve it using Nginx.
+# It uses a multi-stage build to first build the API backend and then the React app and then serve it using Nginx.
 # =========================
 
 steps:
   # 1. Build Docker image
+
+  # 1.1 Build and deploy the API Backend
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'northamerica-northeast1-docker.pkg.dev/merci-509500/pjb-arti-repo/prairiejoy-api:$COMMIT_SHA', '-f', 'apps/api/Dockerfile', '.']
+  
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'northamerica-northeast1-docker.pkg.dev/merci-509500/pjb-arti-repo/prairiejoy-api:$COMMIT_SHA']
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    args: ['gcloud', 'run', 'deploy', 'prairiejoy-api', '--image', 'northamerica-northeast1-docker.pkg.dev/merci-509500/pjb-arti-repo/prairiejoy-api:$COMMIT_SHA', '--region', 'northamerica-northeast1', '--platform', 'managed', '--port', '8080', '--allow-unauthenticated']
+
+  # 1.2 Build and deploy the Web Frontend (passing the backend URL from the api Backend!)
   - name: 'gcr.io/cloud-builders/docker'
     args:
       - 'build'
@@ -41,6 +52,7 @@ steps:
 
 images:
   - 'northamerica-northeast1-docker.pkg.dev/merci-509500/pjb-arti-repo/prairiejoy-web:$COMMIT_SHA'
+  - 'northamerica-northeast1-docker.pkg.dev/merci-509500/pjb-arti-repo/prairiejoy-api:$COMMIT_SHA'
 
 options:
   logging: CLOUD_LOGGING_ONLY

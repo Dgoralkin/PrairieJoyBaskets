@@ -3,7 +3,7 @@ import type { Basket, Category } from '@repo/types';
 export class PrairieJoyClient {
     private baseUrl: string;
 
-    constructor(baseUrl: string = 'http://localhost:4000') {
+    constructor(baseUrl: string = 'https://prairiejoy-api-825396310385.northamerica-northeast1.run.app') {
         this.baseUrl = baseUrl.replace(/\/$/, '');
     }
 
@@ -32,8 +32,7 @@ const resolveApiUrl = (): string => {
     }
 
     if (import.meta.env.DEV) {
-        // return 'http://localhost:4000';
-        return 'https://prairiejoy-api-825396310385.northamerica-northeast1.run.app';
+        return 'http://localhost:4000';
     }
 
     throw new Error(

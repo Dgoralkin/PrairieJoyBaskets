@@ -10,11 +10,11 @@ const { Pool, types } = pg;
 // Parse Postgres NUMERIC / DECIMAL (type ID 1700) to JavaScript floats
 types.setTypeParser(1700, (val: string) => parseFloat(val));
 
-// For DEV - local connection, read env vars from apps/api/.env file
+// Pool config — supports both TCP (IP/hostname) and Cloud SQL Unix socket paths
 export const pool = new Pool({
-    // If DB_HOST is a Unix socket path (starts with /), use 'host', otherwise use IP/domain
-    [process.env.DB_HOST?.startsWith('/') ? 'host' : 'host']: process.env.DB_HOST || '127.0.0.1',
-    // Only include port if we aren't using a Unix socket
+    // pg detects Unix socket paths automatically when 'host' starts with '/'
+    host: process.env.DB_HOST || '127.0.0.1',
+    // Skip port for Unix socket connections (Cloud SQL Auth Proxy uses socket files)
     ...(process.env.DB_HOST?.startsWith('/') ? {} : { port: Number(process.env.DB_PORT) || 5432 }),
     user: process.env.DB_USER || 'postgres',
     password: process.env.DB_PASSWORD,

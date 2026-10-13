@@ -40,7 +40,7 @@ COPY apps/web/vite.config.ts ./apps/web/vite.config.ts
 COPY packages ./packages
 
 # Get the API URL from the build argument (set in Cloud Run or defined in cloudbuild.yaml)
-ARG VITE_API_URL
+ARG VITE_API_URL=https://prairiejoy-api-825396310385.northamerica-northeast1.run.app
 ENV VITE_API_URL=$VITE_API_URL
 
 # Build web app

@@ -24,16 +24,11 @@ export class PrairieJoyClient {
     }
 }
 
-const resolveApiUrl = () => {
-    // Cast import.meta as any so TypeScript stops complaining about .env
+const resolveApiUrl = (): string => {
     const viteEnvUrl = (import.meta as any).env?.VITE_API_URL;
 
-    if (viteEnvUrl && !viteEnvUrl.includes('localhost')) {
-        return viteEnvUrl;
-    }
-
-    if (typeof window !== 'undefined' && window.location.hostname !== 'localhost') {
-        return window.location.origin;
+    if (viteEnvUrl) {
+        return viteEnvUrl.replace(/\/+$/, '');
     }
 
     return 'http://localhost:4000';

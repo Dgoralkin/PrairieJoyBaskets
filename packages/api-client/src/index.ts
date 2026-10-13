@@ -24,7 +24,19 @@ export class PrairieJoyClient {
     }
 }
 
-export const apiClient = new PrairieJoyClient(
-    (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_API_URL) ||
-    (typeof window !== 'undefined' ? window.location.origin : '')
-);
+const resolveApiUrl = () => {
+    // Cast import.meta as any so TypeScript stops complaining about .env
+    const viteEnvUrl = (import.meta as any).env?.VITE_API_URL;
+
+    if (viteEnvUrl && !viteEnvUrl.includes('localhost')) {
+        return viteEnvUrl;
+    }
+
+    if (typeof window !== 'undefined' && window.location.hostname !== 'localhost') {
+        return window.location.origin;
+    }
+
+    return 'http://localhost:4000';
+};
+
+export const apiClient = new PrairieJoyClient(resolveApiUrl());

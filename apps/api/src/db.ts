@@ -12,11 +12,12 @@ types.setTypeParser(1700, (val: string) => parseFloat(val));
 
 // For DEV - local connection, read env vars from apps/api/.env file
 export const pool = new Pool({
-    host: process.env.DB_HOST || '127.0.0.1',
-    port: Number(process.env.DB_PORT) || 5432,
+    // If DB_HOST is a Unix socket path (starts with /), use 'host', otherwise use IP/domain
+    [process.env.DB_HOST?.startsWith('/') ? 'host' : 'host']: process.env.DB_HOST || '127.0.0.1',
+    // Only include port if we aren't using a Unix socket
+    ...(process.env.DB_HOST?.startsWith('/') ? {} : { port: Number(process.env.DB_PORT) || 5432 }),
     user: process.env.DB_USER || 'postgres',
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME || 'pjb-web-db',
-    // Disable SSL when using Cloud SQL Auth Proxy on localhost
     ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false, checkServerIdentity: () => undefined } : false,
 });

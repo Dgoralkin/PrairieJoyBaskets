@@ -25,13 +25,19 @@ export class PrairieJoyClient {
 }
 
 const resolveApiUrl = (): string => {
-    const viteEnvUrl = (import.meta as any).env?.VITE_API_URL;
+    const viteEnvUrl = import.meta.env?.VITE_API_URL;
 
     if (viteEnvUrl) {
         return viteEnvUrl.replace(/\/+$/, '');
     }
 
-    return 'http://localhost:4000';
+    if (import.meta.env.DEV) {
+        return 'http://localhost:4000';
+    }
+
+    throw new Error(
+        'VITE_API_URL is missing from the production build.'
+    );
 };
 
 export const apiClient = new PrairieJoyClient(resolveApiUrl());

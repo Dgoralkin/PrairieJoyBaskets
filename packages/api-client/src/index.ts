@@ -32,7 +32,7 @@ const resolveApiUrl = (): string => {
     }
 
     if (import.meta.env.DEV) {
-        return 'http://localhost:4000';
+        return 'https://prairiejoy-api-825396310385.northamerica-northeast1.run.app';
     }
 
     throw new Error(

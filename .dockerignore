@@ -7,5 +7,4 @@ npm-debug.log
 .env
 .vscode
 .idea
-Dockerfile
 docker-compose.yml

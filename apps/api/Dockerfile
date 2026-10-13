@@ -15,7 +15,7 @@ WORKDIR /app
 RUN corepack enable && corepack prepare pnpm@12.6.0 --activate
 
 # Copy just the files needed for dependency installation
-COPY apps/api/package.json apps/api/pnpm-lock.yaml ./
+COPY apps/api/package.json pnpm-lock.yaml
 COPY packages/types/package.json packages/types/
 COPY packages/api-client/package.json packages/api-client/
 COPY packages/tsconfig/package.json packages/tsconfig/

@@ -14,8 +14,14 @@ WORKDIR /app
 # Install pnpm (matches the version used in the repo)
 RUN corepack enable && corepack prepare pnpm@12.6.0 --activate
 
-# Copy just the files needed for dependency installation
-COPY apps/api/package.json pnpm-lock.yaml
+# Copy root workspace config files (required by pnpm to resolve the monorepo)
+COPY package.json pnpm-workspace.yaml ./
+
+# Copy the lockfile
+COPY pnpm-lock.yaml ./
+
+# Copy each workspace package's package.json for dependency caching
+COPY apps/api/package.json apps/api/
 COPY packages/types/package.json packages/types/
 COPY packages/api-client/package.json packages/api-client/
 COPY packages/tsconfig/package.json packages/tsconfig/

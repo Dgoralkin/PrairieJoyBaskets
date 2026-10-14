@@ -64,6 +64,11 @@ steps:
       - '8080'
       - '--allow-unauthenticated'
 
+  # 4. Update traffic to the latest revision of the deployed service
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: 'gcloud'
+    args: ['run', 'services', 'update-traffic', 'prairiejoy-web', '--to-latest', '--region', 'northamerica-northeast1']
+
 images:
   - 'northamerica-northeast1-docker.pkg.dev/merci-509500/pjb-arti-repo/prairiejoy-web:$COMMIT_SHA'
   - 'northamerica-northeast1-docker.pkg.dev/merci-509500/pjb-arti-repo/prairiejoy-api:$COMMIT_SHA'

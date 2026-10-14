@@ -3,8 +3,8 @@ import type { Basket, Category } from '@repo/types';
 export class PrairieJoyClient {
     private baseUrl: string;
 
-    constructor(baseUrl: string = 'https://prairiejoy-api-825396310385.northamerica-northeast1.run.app') {
-        this.baseUrl = baseUrl.replace(/\/$/, '');
+    constructor(baseUrl: string) {
+    this.baseUrl = baseUrl.replace(/\/$/, '');
     }
 
     async getCategories(): Promise<Category[]> {
@@ -25,19 +25,10 @@ export class PrairieJoyClient {
 }
 
 const resolveApiUrl = (): string => {
-    const viteEnvUrl = import.meta.env?.VITE_API_URL;
-
-    if (viteEnvUrl) {
-        return viteEnvUrl.replace(/\/+$/, '');
-    }
-
-    if (import.meta.env.DEV) {
-        return 'https://prairiejoy-api-825396310385.northamerica-northeast1.run.app';
-    }
-
-    throw new Error(
-        'VITE_API_URL is missing from the production build.'
-    );
+    const env = (import.meta as any).env;
+    if (env?.VITE_API_URL) return String(env.VITE_API_URL).replace(/\/+$/, '');
+    if (env?.DEV) return 'http://localhost:4000';
+    throw new Error('VITE_API_URL was not set at build time');
 };
 
 export const apiClient = new PrairieJoyClient(resolveApiUrl());

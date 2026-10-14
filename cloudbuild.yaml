@@ -21,9 +21,11 @@ steps:
     args:
       - '-c'
       - |
+        set -euo pipefail
         API_URL=$$(gcloud run services describe prairiejoy-api --region=northamerica-northeast1 --format='value(status.url)')
+        test -n "$$API_URL"
         echo "Extracted Backend API URL: $$API_URL"
-        echo $$API_URL > /workspace/api_url.txt
+        echo "$$API_URL" > /workspace/api_url.txt
 
   # 1.3 Build and deploy the Web Frontend (passing the backend URL from the api Backend!)
   - name: 'gcr.io/cloud-builders/docker'

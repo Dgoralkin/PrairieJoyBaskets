@@ -1,6 +1,7 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App'
+import './index.css'
 
 /// Define the root element from index.htmland render React (App.tsx) into it.
 ReactDOM.createRoot(document.getElementById('root')!).render(

@@ -35,6 +35,7 @@ COPY apps/web/public ./apps/web/public
 COPY apps/web/index.html ./apps/web/index.html
 COPY apps/web/tsconfig.json ./apps/web/tsconfig.json
 COPY apps/web/vite.config.ts ./apps/web/vite.config.ts
+COPY apps/web/tailwind.config.js ./apps/web/tailwind.config.js
 
 # Copy shared packages source
 COPY packages ./packages

@@ -42,7 +42,7 @@ COPY apps/web/postcss.config.js ./apps/web/postcss.config.js
 COPY packages ./packages
 
 # Get the API URL from the build argument (set in Cloud Run or defined in cloudbuild.yaml)
-ARG VITE_API_URL=https://prairiejoy-api-825396310385.northamerica-northeast1.run.app
+ARG VITE_API_URL=https://prairiejoy-api-618983862687.northamerica-northeast1.run.app
 ENV VITE_API_URL=$VITE_API_URL
 
 # Build web app

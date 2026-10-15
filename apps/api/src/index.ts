@@ -2,7 +2,6 @@ import express from 'express';
 import cors from 'cors';
 import { pool } from './db.js';
 import type { Basket, Category } from '@repo/types';
-import { hostname } from 'os';
 
 const app = express();
 const port = process.env.PORT || 8080;

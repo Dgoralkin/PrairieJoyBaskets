@@ -8,12 +8,12 @@ steps:
 
   # 1.1 Build and deploy the API Backend
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-t', 'northamerica-northeast1-docker.pkg.dev/merci-509500/pjb-arti-repo/prairiejoy-api:$COMMIT_SHA', '-f', 'apps/api/Dockerfile', '.']
+    args: ['build', '-t', 'northamerica-northeast1-docker.pkg.dev/prairiejoybaskets/pjb-arti-repo/prairiejoy-api:$COMMIT_SHA', '-f', 'apps/api/Dockerfile', '.']
   
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', 'northamerica-northeast1-docker.pkg.dev/merci-509500/pjb-arti-repo/prairiejoy-api:$COMMIT_SHA']
+    args: ['push', 'northamerica-northeast1-docker.pkg.dev/prairiejoybaskets/pjb-arti-repo/prairiejoy-api:$COMMIT_SHA']
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
-    args: ['gcloud', 'run', 'deploy', 'prairiejoy-api', '--image', 'northamerica-northeast1-docker.pkg.dev/merci-509500/pjb-arti-repo/prairiejoy-api:$COMMIT_SHA', '--region', 'northamerica-northeast1', '--platform', 'managed', '--port', '8080', '--allow-unauthenticated']
+    args: ['gcloud', 'run', 'deploy', 'prairiejoy-api', '--image', 'northamerica-northeast1-docker.pkg.dev/prairiejoybaskets/pjb-arti-repo/prairiejoy-api:$COMMIT_SHA', '--region', 'northamerica-northeast1', '--platform', 'managed', '--port', '8080', '--allow-unauthenticated']
 
   # 1.2: Programmatically extract the live API URL from Cloud Run and inject it into the Docker build argument VITE_API_URL
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
@@ -38,14 +38,14 @@ steps:
         API_URL=$$(cat /workspace/api_url.txt)
         docker build \
           --build-arg VITE_API_URL="$$API_URL" \
-          -t northamerica-northeast1-docker.pkg.dev/merci-509500/pjb-arti-repo/prairiejoy-web:$COMMIT_SHA \
+          -t northamerica-northeast1-docker.pkg.dev/prairiejoybaskets/pjb-arti-repo/prairiejoy-web:$COMMIT_SHA \
           -f Dockerfile .
 
   # 2. Push image to Artifact Registry
   - name: 'gcr.io/cloud-builders/docker'
     args:
       - 'push'
-      - 'northamerica-northeast1-docker.pkg.dev/merci-509500/pjb-arti-repo/prairiejoy-web:$COMMIT_SHA'
+      - 'northamerica-northeast1-docker.pkg.dev/prairiejoybaskets/pjb-arti-repo/prairiejoy-web:$COMMIT_SHA'
 
   # 3. Deploy image to Cloud Run
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
@@ -55,7 +55,7 @@ steps:
       - 'deploy'
       - 'prairiejoy-web'
       - '--image'
-      - 'northamerica-northeast1-docker.pkg.dev/merci-509500/pjb-arti-repo/prairiejoy-web:$COMMIT_SHA'
+      - 'northamerica-northeast1-docker.pkg.dev/prairiejoybaskets/pjb-arti-repo/prairiejoy-web:$COMMIT_SHA'
       - '--region'
       - 'northamerica-northeast1'
       - '--platform'
@@ -70,11 +70,11 @@ steps:
     args: ['run', 'services', 'update-traffic', 'prairiejoy-web', '--to-latest', '--region', 'northamerica-northeast1']
 
 images:
-  - 'northamerica-northeast1-docker.pkg.dev/merci-509500/pjb-arti-repo/prairiejoy-web:$COMMIT_SHA'
-  - 'northamerica-northeast1-docker.pkg.dev/merci-509500/pjb-arti-repo/prairiejoy-api:$COMMIT_SHA'
+  - 'northamerica-northeast1-docker.pkg.dev/prairiejoybaskets/pjb-arti-repo/prairiejoy-web:$COMMIT_SHA'
+  - 'northamerica-northeast1-docker.pkg.dev/prairiejoybaskets/pjb-arti-repo/prairiejoy-api:$COMMIT_SHA'
 
 options:
   logging: CLOUD_LOGGING_ONLY
 
 # Bind the predifined Cloud Build service account to the Cloud Run Invoker role for the deployed service.
-serviceAccount: 'projects/merci-509500/serviceAccounts/cloud-build-sa@merci-509500.iam.gserviceaccount.com'
+serviceAccount: 'projects/prairiejoybaskets/serviceAccounts/cloud-build-sa@prairiejoybaskets.iam.gserviceaccount.com'

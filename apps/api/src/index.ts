@@ -1,3 +1,6 @@
+/* This file contains the main entry point for the API server */
+/* It defines the Express app and its routes (get, post, put, delete) */
+
 import express from 'express';
 import cors from 'cors';
 import { pool } from './db.js';

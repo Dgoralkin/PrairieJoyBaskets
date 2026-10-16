@@ -271,7 +271,7 @@ function App() {
   const cartTotal = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
   const cartCount = cart.reduce((sum, item) => sum + item.qty, 0);
 
-  // Load categories & catalog baskets from Cloud SQL via API
+  // Load categories & catalog baskets from Cloud SQL via API call.
   useEffect(() => {
     async function loadCatalog() {
       try {
@@ -388,7 +388,7 @@ function App() {
 
 
 
-      {/* Shop by Category - Insert items from Postgre DB here !*/}
+      {/* Shop by Category - Insert baskets from Postgre DB here !*/}
       <main className="mx-auto flex w-full max-w-7xl flex-grow flex-col px-4 py-10 sm:px-6 lg:px-8">
         <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
           <div>
@@ -433,7 +433,7 @@ function App() {
                     alt={basket.title}
                     className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
                     onError={(event) => {
-                      event.currentTarget.src = 'https://placehold.co/600x400/f4efe6/78350f?text=Winnipeg+Basket+Co.';
+                      event.currentTarget.src = '../public/PJB_bskt_placeholder.png';
                     }}
                   />
                   <div className="absolute left-3 top-3 flex flex-wrap gap-1">

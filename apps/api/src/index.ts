@@ -1,5 +1,6 @@
 /* This file contains the main entry point for the API server */
 /* It defines the Express app and its routes (get, post, put, delete) */
+/* It also initializes the Google Cloud Storage client and provides a helper function to generate signed URLs for images stored in GCS */
 
 import express from 'express';
 import cors from 'cors';
@@ -14,13 +15,13 @@ app.use(cors());
 app.use(express.json());
 
 // Initialize Google Cloud Storage client
-// This automatically picks up your backend's IAM service account credentials on Cloud Run. 
+// This automatically picks up the backend's IAM service account credentials on Cloud Run. 
 const storage = new Storage();
 // The name of the GCS bucket where images are stored.
 const BUCKET_NAME = process.env.GCS_BUCKET_NAME || 'pjb_media_bucket';
 
 
-/* Helper function to generate a temporary GCS Signed URL for a given file path */
+/* Helper function to generate a temporary GCS Signed URL for a given file path for fetching images from Google Cloud Storage */
 async function getSignedImageUrl(rawUrl: string): Promise<string> {
     if (!rawUrl) return '';
 

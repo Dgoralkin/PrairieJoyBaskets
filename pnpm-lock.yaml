@@ -186,6 +186,9 @@ importers:
 
   apps/api:
     dependencies:
+      '@google-cloud/storage':
+        specifier: ^8.4.0
+        version: 8.4.0
       '@repo/types':
         specifier: workspace:*
         version: link:../../packages/types

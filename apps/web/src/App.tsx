@@ -433,7 +433,7 @@ function App() {
                     alt={basket.title}
                     className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
                     onError={(event) => {
-                      event.currentTarget.src = '../public/PJB_bskt_placeholder.png';
+                      event.currentTarget.src = '/PJB_bskt_placeholder.png';
                     }}
                   />
                   <div className="absolute left-3 top-3 flex flex-wrap gap-1">

@@ -3,6 +3,7 @@
 
 import express from 'express';
 import cors from 'cors';
+import { Storage } from '@google-cloud/storage';
 import { pool } from './db.js';
 import type { Basket, Category } from '@repo/types';
 
@@ -11,6 +12,49 @@ const port = process.env.PORT || 8080;
 
 app.use(cors());
 app.use(express.json());
+
+// Initialize Google Cloud Storage client
+// This automatically picks up your backend's IAM service account credentials on Cloud Run. 
+const storage = new Storage();
+// The name of the GCS bucket where images are stored.
+const BUCKET_NAME = process.env.GCS_BUCKET_NAME || 'pjb_media_bucket';
+
+
+/* Helper function to generate a temporary GCS Signed URL for a given file path */
+async function getSignedImageUrl(rawUrl: string): Promise<string> {
+    if (!rawUrl) return '';
+
+    try {
+        let objectPath = rawUrl;
+
+        // Extract object path if rawUrl is a standard GCS public URL
+        // e.g., "https://storage.googleapis.com/pjb_media_bucket/basket_image_url/b1.avif" -> "basket_image_url/b1.avif"
+        if (rawUrl.includes('storage.googleapis.com')) {
+            const parsedUrl = new URL(rawUrl);
+            // pathname is "/pjb_media_bucket/basket_image_url/b1.avif"
+            const pathSegments = parsedUrl.pathname.split('/').filter(Boolean);
+            
+            // Skip the bucket name (first segment) and join the remaining path
+            objectPath = pathSegments.slice(1).join('/');
+        }
+
+        const options = {
+            version: 'v4' as const,
+            action: 'read' as const,
+            expires: Date.now() + 60 * 60 * 1000, // Valid for 1 hour
+        };
+
+        const [signedUrl] = await storage
+            .bucket(BUCKET_NAME) // 'pjb_media_bucket'
+            .file(objectPath)
+            .getSignedUrl(options);
+
+        return signedUrl;
+    } catch (error) {
+        console.error(`Failed to generate signed URL for path: ${rawUrl}`, error);
+        return rawUrl; // Fallback to raw string if signing fails
+    }
+}
 
 // Health check endpoint
 app.get('/health', (_req, res) => {
@@ -65,7 +109,18 @@ app.get('/api/v1/baskets', async (req, res) => {
         queryText += ` ORDER BY b.title ASC;`;
 
         const result = await pool.query(queryText, params);
-        res.json(result.rows as Basket[]);
+
+        // Map through database rows and generate signed URLs concurrently for each basket image
+        const basketsWithSignedImages = await Promise.all(
+            result.rows.map(async (basket: any) => {
+                const signedImage = await getSignedImageUrl(basket.image);
+                return {
+                    ...basket,
+                    image: signedImage, // Replaces raw db path with secure 1-hour signed URL
+                };
+            })
+        );
+        res.json(basketsWithSignedImages as Basket[]);
     } catch (error) {
         console.error('Failed to fetch baskets:', error);
         res.status(500).json({ error: 'Failed to fetch baskets' });

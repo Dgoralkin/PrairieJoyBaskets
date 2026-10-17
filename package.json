@@ -22,5 +22,8 @@
   "devDependencies": {
     "turbo": "^2.11.3",
     "typescript": "^7.0.2"
+  },
+  "dependencies": {
+    "@google-cloud/storage": "^8.4.0"
   }
 }

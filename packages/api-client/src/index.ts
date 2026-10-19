@@ -30,10 +30,11 @@ export class PrairieJoyClient {
 falling back to http://localhost:4000 during local development or requiring an explicit build-time environment variable (VITE_API_URL) for production builds.*/
 const resolveApiUrl = (): string => {
     const env = (import.meta as any).env;
+    // If an environment variable named VITE_API_URL is provided, use that URL
     if (env?.VITE_API_URL) return String(env.VITE_API_URL).replace(/\/+$/, '');
+    // If the environment is detected as development, return the local development URL
     if (env?.DEV) return 'http://localhost:4000';
-    return ''; // <--- Return empty string instead of throwing error!
+    throw new Error('VITE_API_URL was not set at build time');
 };
-
 
 export const apiClient = new PrairieJoyClient(resolveApiUrl());

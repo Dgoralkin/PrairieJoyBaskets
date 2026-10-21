@@ -41,7 +41,6 @@ steps:
   - name: 'gcr.io/cloud-builders/docker'
     args:
       - 'build'
-      - '--build-arg'
       - '-t'
       - 'northamerica-northeast1-docker.pkg.dev/prairiejoybaskets/pjb-arti-repo/prairiejoy-web:$COMMIT_SHA'
       - '-f'

@@ -7,6 +7,18 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [react()],
 
+    // 1. This server block is for local development
+    server: {
+      port: 5173,
+      proxy: {
+        '/api': {
+          target: `http://localhost:${env.PORT || 4000}`, // Matches our local backend port for development (read from .env with fallback to 4000)
+          changeOrigin: true,
+        },
+      },
+    },
+
+    // 2. Keep your existing preview/production config
     preview: {
       allowedHosts: ['prairiejoybaskets.onrender.com'],
       host: '0.0.0.0',

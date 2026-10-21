@@ -1,3 +1,6 @@
+// This file is part of the PrairieJoyBaskets project and provides an API client for interacting with the backend services.
+// It includes methods to fetch categories and baskets from the API.
+
 import type { Basket, Category } from '@repo/types';
 
 export class PrairieJoyClient {

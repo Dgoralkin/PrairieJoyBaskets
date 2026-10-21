@@ -1,7 +1,7 @@
 {
   "name": "Prairie_Joy_Baskets_app",
   "version": "1.0.0",
-  "description": "Prairie Joy Baskets app is a cloud based MERN (Cloud SQL based) stack application for a web and mobile B2B/B2C platform.",
+  "description": "Prairie Joy Baskets app is a cloud based MERN (Cloud SQL Postgres based) stack application for a web and mobile B2B/B2C platform.",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -25,5 +25,13 @@
   },
   "dependencies": {
     "@google-cloud/storage": "^8.4.0"
+  },
+  "pnpm": {
+    "overrides": {
+      "brace-expansion": ">=4.0.0",
+      "ip-address": ">=10.0.0",
+      "picomatch": ">=4.0.0",
+      "postcss-selector-parser": ">=6.1.2"
+    }
   }
 }

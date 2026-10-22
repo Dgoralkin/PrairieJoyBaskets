@@ -70,96 +70,7 @@ const CATALOG_BASKETS: Basket[] = [
       'Prairie Smokehouse Sausage',
       'Cornell Cracker Co. Wafers',
     ],
-  },
-  {
-    id: 'b2',
-    title: 'Bison & Brews Craft Box',
-    category: 'Craft Drinks',
-    price: 95,
-    rating: 4.8,
-    reviews: 38,
-    image: 'https://images.unsplash.com/photo-1513151233558-d860c5398176?auto=format&fit=crop&w=800&q=80',
-    description:
-      'Featuring local Winnipeg microbrew snacks, bison jerky strips, smoked almonds, and custom branded beer glasses.',
-    tags: ['For Him', 'B2B Favorite'],
-    contents: [
-      'Winnipeg Bison Jerky (100g)',
-      'Kilter Brewery Snacks',
-      'Transcona Roasted Nuts',
-      'Custom Cedar Crate',
-    ],
-  },
-  {
-    id: 'b3',
-    title: 'Exchange District Delights',
-    category: 'Sweet Treats',
-    price: 85,
-    rating: 5.0,
-    reviews: 29,
-    image: 'https://images.unsplash.com/photo-1581783342308-f792dbdd27c5?auto=format&fit=crop&w=800&q=80',
-    description:
-      'Inspired by the creative cobblestone district: hand-dipped truffles, single-origin espresso beans, and cinnamon-dusted pastries.',
-    tags: ['Sweet Tooth', 'Artisan'],
-    contents: [
-      'DeLuca Espresso Whole Beans',
-      'Asessippi Truffles (6pc)',
-      'Wolseley Jam Co. Raspberry Jam',
-    ],
-  },
-  {
-    id: 'b4',
-    title: 'Corporate Appreciation Bundle',
-    category: 'Corporate',
-    price: 140,
-    rating: 4.9,
-    reviews: 64,
-    image: 'https://images.unsplash.com/photo-1513885535751-8b9238bd345a?auto=format&fit=crop&w=800&q=80',
-    description:
-      'Impress clients or team members with an elegant wooden box packed with fair-trade coffee, gourmet cookies, and custom logo ribbon.',
-    tags: ['Bulk Available', 'Corporate'],
-    contents: [
-      'Dogwood Coffee Beans',
-      'Artisan Stroopwafels',
-      'Forks Market Nut Mix',
-      'Saskatoon Berry Jam',
-    ],
-  },
-  {
-    id: 'b5',
-    title: 'St. Vital Spa & Botanical Relax',
-    category: 'Self Care',
-    price: 110,
-    rating: 4.7,
-    reviews: 19,
-    image: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=800&q=80',
-    description:
-      'Nourishing local organic bath salts, lavender infused candles, artisan soaps, and soothing chamomile tea.',
-    tags: ['Relaxation', 'Self Care'],
-    contents: [
-      'River Heights Botanical Soap',
-      'Manitoba Lavender Candle',
-      'Chamomile Tea Tins',
-      'Organic Cotton Towel',
-    ],
-  },
-  {
-    id: 'b6',
-    title: 'The Golden Boy Celebration Crate',
-    category: 'Gourmet Food',
-    price: 175,
-    rating: 5.0,
-    reviews: 51,
-    image: 'https://images.unsplash.com/photo-1577998474517-7eeeed4e448a?auto=format&fit=crop&w=800&q=80',
-    description:
-      'Our ultimate luxury basket packed with premium wine jams, cured meats, artisan chocolates, and handcrafted wooden keepsake box.',
-    tags: ['Luxury', 'VIP'],
-    contents: [
-      'Full Luxury Spread',
-      'Custom Wooden Keepsake Box',
-      'Manitoba Maple Syrup',
-      'Artisan Cheese Knife Set',
-    ],
-  },
+  }
 ];
 
 const filterOptions = ['All', 'Gourmet Food', 'Craft Drinks', 'Sweet Treats', 'Corporate', 'Self Care'];
@@ -176,18 +87,11 @@ const CUSTOM_ADDONS: Addon[] = [
   { id: 'c8', name: 'Cedar Gift Crate Upgrade', price: 18, category: 'Packaging' },
 ];
 
-const WINNIPEG_ZONES: Zone[] = [
-  { id: 'z1', name: 'Downtown / Exchange District / Osborne', price: 10, estDays: 'Same-Day Available' },
-  { id: 'z2', name: 'St. Vital / Linden Woods / Tuxedo', price: 12, estDays: 'Next-Day' },
-  { id: 'z3', name: 'East Kildonan / Transcona / St. Boniface', price: 12, estDays: 'Next-Day' },
-  { id: 'z4', name: 'River Heights / Fort Garry / Bridgewater', price: 10, estDays: 'Same-Day Available' },
-  { id: 'z5', name: 'Outer Perimeter & Headingley', price: 18, estDays: '2-3 Business Days' },
-];
-
 function App() {
   const [baskets, setBaskets] = useState<Basket[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [selectedZone, setSelectedZone] = useState<Zone>(WINNIPEG_ZONES[0]);
+  const [zones, setZones] = useState<Zone[]>([]);
+  const [selectedZone, setSelectedZone] = useState<Zone | undefined>(undefined);
   const [categoryFilter, setCategoryFilter] = useState<string>('All');
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -277,12 +181,16 @@ function App() {
       try {
         setIsLoadingData(true);
         setErrorMsg(null);
-        const [catData, basketData] = await Promise.all([
+        const [catData, basketData, zoneData] = await Promise.all([
           apiClient.getCategories(),
           apiClient.getBaskets(),
+          apiClient.getZones()
         ]);
         setCategories(catData);
         setBaskets(basketData);
+        setZones(zoneData);
+        // Safely set the first zone if one exists.
+        if (zoneData.length > 0) setSelectedZone(zoneData[0]);
       } catch (err: any) {
         console.error('Error fetching catalog data:', err);
         setErrorMsg('Unable to load gift baskets. Please check if the API and database are running.');
@@ -368,13 +276,14 @@ function App() {
               <span className="font-medium text-slate-500 whitespace-nowrap">Delivery Zone:</span>
               <select
                 className="cursor-pointer bg-transparent font-semibold text-slate-800 focus:outline-none truncate max-w-[160px] sm:max-w-none"
-                value={selectedZone.id}
+                // Provide a fallback value while zones are loading.
+                value={selectedZone?.id ?? ''} 
                 onChange={(event) => {
-                  const nextZone = WINNIPEG_ZONES.find((zone) => zone.id === event.target.value);
+                  const nextZone = zones.find((zone) => zone.id === event.target.value);
                   if (nextZone) setSelectedZone(nextZone);
                 }}
               >
-                {WINNIPEG_ZONES.map((zone) => (
+                {zones.map((zone) => (
                   <option key={zone.id} value={zone.id}>
                     {zone.name} (${zone.price})
                   </option>
@@ -417,7 +326,7 @@ function App() {
         {isLoadingData ? (
           <div className="py-20 text-center text-slate-500">
             <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-4 border-amber-600 border-t-transparent" />
-            <p className="font-medium">Loading prairie gift baskets...</p>
+            <p className="font-medium">Assembling your gift baskets...</p>
           </div>
         ) : errorMsg ? (
           <div className="my-10 rounded-xl bg-red-50 p-6 text-center text-red-700">

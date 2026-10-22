@@ -128,6 +128,22 @@ app.get('/api/v1/baskets', async (req, res) => {
     }
 });
 
+// GET /api/v1/zones - Returns delivery zones with their prices and estimated delivery days
+app.get('/api/v1/zones', async (_req, res) => {
+    try {
+        const result = await pool.query(`
+            SELECT id, name, price, est_days, is_active, created_at
+            FROM delivery_zones
+            ORDER BY id;
+            `);
+        res.json(result.rows);
+        console.log('Fetched zones:', result.rows);
+    } catch (error) {
+        console.error('Failed to fetch zones:', error);
+        res.status(500).json({ error: 'Failed to fetch zones' });
+    }
+});
+
 app.listen(Number(port), '0.0.0.0', () => {
     console.log(`Backend server Prairie Joy Baskets is listening on port ${port}`);
 });

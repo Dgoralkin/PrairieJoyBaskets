@@ -1,7 +1,7 @@
 // This file is part of the PrairieJoyBaskets project and provides an API client for interacting with the backend services.
 // It includes methods to fetch categories and baskets from the API.
 
-import type { Basket, Category } from '@repo/types';
+import type { Basket, Category, Zone } from '@repo/types';
 
 export class PrairieJoyClient {
 
@@ -23,6 +23,13 @@ export class PrairieJoyClient {
         // Pass url.toString() (which automatically handles the relative path + query params)
         const res = await fetch(url.toString());
         if (!res.ok) throw new Error(`Failed to fetch baskets: ${res.statusText}`);
+        return res.json();
+    }
+
+    // Helper method to...
+    async getZones(): Promise<Zone[]> {
+        const res = await fetch('/api/v1/zones');
+        if (!res.ok) throw new Error(`Failed to fetch zones: ${res.statusText}`);
         return res.json();
     }
 }

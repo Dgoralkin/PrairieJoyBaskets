@@ -30,16 +30,27 @@ export type CartItem = Omit<Basket, 'categoryId' | 'isActive'> & {
     contents?: string[];
 };
 
-export interface Addon {
-    id: string;
-    name: string;
-    price: number;
-    category: string;
-}
-
 export interface Zone {
     id: string;
     name: string;
     price: number;
     estDays: string;
 }
+
+export interface Addon {
+    id: string;
+    name: string;
+    category: string;
+    msrp: number;
+    cost: number;
+    isActive?: boolean;
+}
+
+export interface CorpForm {
+    companyName: string;
+    contactEmail: string;
+    quantity: number;
+    deliveryDate: string;
+    notes: string;
+}
+

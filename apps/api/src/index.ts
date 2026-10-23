@@ -68,6 +68,7 @@ app.get('/api/v1/categories', async (_req, res) => {
         const result = await pool.query(`
       SELECT id, name, sort_order AS "sortOrder"
       FROM basket_categories
+      WHERE sort_order < 6
       ORDER BY sort_order ASC;
     `);
         res.json(result.rows as Category[]);
@@ -137,10 +138,25 @@ app.get('/api/v1/zones', async (_req, res) => {
             ORDER BY id;
             `);
         res.json(result.rows);
-        console.log('Fetched zones:', result.rows);
+        // console.log('Fetched zones:', result.rows);
     } catch (error) {
         console.error('Failed to fetch zones:', error);
         res.status(500).json({ error: 'Failed to fetch zones' });
+    }
+});
+
+// GET /api/v1/addons - Returns catalog products (addons) with their prices and categories
+app.get('/api/v1/addons', async (_req, res) => {
+    try {
+        const result = await pool.query(`
+            SELECT id, name, category, msrp, cost, is_active
+            FROM catalog_products
+            ORDER BY id ASC;
+        `);
+        res.json(result.rows);
+    } catch (error) {
+        console.error('Failed to fetch catalog products / addons:', error);
+        res.status(500).json({ error: 'Failed to fetch catalog products / addons' });
     }
 });
 

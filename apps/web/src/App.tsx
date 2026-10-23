@@ -16,105 +16,53 @@ import {
   X,
 } from 'lucide-react';
 import { apiClient } from '@repo/api-client';
-import type { Basket, Category, CartItem, Zone, Addon } from '@repo/types';
+import type { Basket, Category, CartItem, Zone, Addon, CorpForm } from '@repo/types';
 
 /*
-type Basket = {
-  id: string;
-  title: string;
-  category: string;
-  price: number;
-  rating: number;
-  reviews: number;
-  image: string;
-  description: string;
-  tags: string[];
-  contents: string[];
-};
-
-type Addon = {
-  id: string;
-  name: string;
-  price: number;
-  category: string;
-};
-
-type Zone = {
-  id: string;
-  name: string;
-  price: number;
-  estDays: string;
-};
-
 type CartItem = Basket & {
   qty: number;
   isCustom?: boolean;
   contents?: string[];
 };
-
-const CATALOG_BASKETS: Basket[] = [
-  {
-    id: 'b1',
-    title: 'Prairie Gourmet Feast',
-    category: 'Gourmet Food',
-    price: 115,
-    rating: 4.9,
-    reviews: 42,
-    image: 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?auto=format&fit=crop&w=800&q=80',
-    description:
-      'A rich selection of Manitoba artisan cheeses, wild flower honey, smokehouse summer sausage, and stone-ground crackers.',
-    tags: ['Local Classic', 'Best Seller'],
-    contents: [
-      'Manitoba Honey Co. Clover Honey',
-      'Bothwell Smoked Gouda',
-      'Prairie Smokehouse Sausage',
-      'Cornell Cracker Co. Wafers',
-    ],
-  }
-];
-
-const filterOptions = ['All', 'Gourmet Food', 'Craft Drinks', 'Sweet Treats', 'Corporate', 'Self Care'];
 */
 
-const CUSTOM_ADDONS: Addon[] = [
-  { id: 'c1', name: 'Manitoba Wildflower Honey (250ml)', price: 12, category: 'Food' },
-  { id: 'c2', name: 'Wolseley Artisan Strawberry Jam', price: 9, category: 'Food' },
-  { id: 'c3', name: 'Exchange District Roast Coffee Beans', price: 16, category: 'Drink' },
-  { id: 'c4', name: 'Handcrafted Bison Leather Coaster Set', price: 22, category: 'Keepsake' },
-  { id: 'c5', name: 'Bothwell Smoked Cheddar Wedge', price: 11, category: 'Food' },
-  { id: 'c6', name: 'Asessippi Dark Chocolate Truffles', price: 14, category: 'Food' },
-  { id: 'c7', name: 'Winnipeg Craft Soda 4-Pack', price: 12, category: 'Drink' },
-  { id: 'c8', name: 'Cedar Gift Crate Upgrade', price: 18, category: 'Packaging' },
-];
+// Define a template for the corporate order form with default values
+const corpFormTemplate: CorpForm = {
+  companyName: '',
+  contactEmail: '',
+  quantity: 20,
+  deliveryDate: '',
+  notes: '',
+};
 
 function App() {
-  const [baskets, setBaskets] = useState<Basket[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [zones, setZones] = useState<Zone[]>([]);
-  const [selectedZone, setSelectedZone] = useState<Zone | undefined>(undefined);
-  const [categoryFilter, setCategoryFilter] = useState<string>('All');
-  const [cart, setCart] = useState<CartItem[]>([]);
-  const [isCartOpen, setIsCartOpen] = useState(false);
-  const [isCorporateDrawerOpen, setIsCorporateDrawerOpen] = useState(false);
-  const [isCustomBuilderOpen, setIsCustomBuilderOpen] = useState(false);
-  const [customBasketName, setCustomBasketName] = useState('My Winnipeg Custom Basket');
-  const [customItems, setCustomItems] = useState<Addon[]>([CUSTOM_ADDONS[0], CUSTOM_ADDONS[2]]);
-  const [corpForm, setCorpForm] = useState({
-    companyName: '',
-    contactEmail: '',
-    quantity: 20,
-    deliveryDate: '',
-    notes: '',
-  });
-  const [corpSubmitted, setCorpSubmitted] = useState(false);
-  const [isLoadingData, setIsLoadingData] = useState(true);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [zones, setZones] = useState<Zone[]>([]);                                   // State to hold the list of delivery zones fetched from the API
+  const [selectedZone, setSelectedZone] = useState<Zone | undefined>(undefined);    // State to hold the currently selected delivery zone
+  
+  const [customItems, setCustomItems] = useState<Addon[]>([]);                      // State to hold the list of available addons/products for custom baskets
+  const [baskets, setBaskets] = useState<Basket[]>([]);                             // State to hold the list of baskets fetched from the API
+  const [categories, setCategories] = useState<Category[]>([]);                     // State to hold the list of categories fetched from the API
+  const [categoryFilter, setCategoryFilter] = useState<string>('All');              // State to hold the currently selected category filter
+  
+  const [cart, setCart] = useState<CartItem[]>([]);                                 // State to hold the items currently in the shopping cart
 
+  const [customBasketName, setCustomBasketName] = useState('My Winnipeg Custom Basket');
+  
+  const [corpForm, setCorpForm] = useState<CorpForm>(corpFormTemplate);             // State to hold the current values of the corporate order form
+  const [corpSubmitted, setCorpSubmitted] = useState(false);                        // State to track whether the corporate order form has been successfully submitted  const [errorMsg, setErrorMsg] = useState<string | null>(null);                    // State to hold any error messages encountered during data fetching
+
+  const [isCartOpen, setIsCartOpen] = useState(false);                              // State to control the visibility of the shopping cart drawer
+  const [isCorporateDrawerOpen, setIsCorporateDrawerOpen] = useState(false);        // State to control the visibility of the corporate order form drawer
+  const [isCustomBuilderOpen, setIsCustomBuilderOpen] = useState(false);            // State to control the visibility of the custom basket builder drawer
+  
+  const [isLoadingData, setIsLoadingData] = useState(true);                         // State to track whether the app is currently loading data from the API
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);                    // State to hold any error messages encountered during data fetching
+
+  // Memorized filtered catalog based on the selected category filter
   const filteredCatalog = useMemo(() => {
     if (categoryFilter === 'All') {
       return baskets;
     }
-
     return baskets.filter((basket) => basket.category === categoryFilter);
   }, [baskets, categoryFilter]);
 
@@ -150,7 +98,7 @@ function App() {
   };
 
   const addCustomBasketToCart = () => {
-    const totalCustomPrice = 20 + customItems.reduce((sum, item) => sum + item.price, 0);
+    const totalCustomPrice = 20 + customItems.reduce((sum, item) => sum + item.msrp, 0);
     const newCustomItem: CartItem = {
       id: `custom-${Date.now()}`,
       title: customBasketName,
@@ -158,7 +106,7 @@ function App() {
       category: 'Custom',
       rating: 5,
       reviews: 0,
-      image: 'https://images.unsplash.com/photo-1512436991641-6745cdb1723f?auto=format&fit=crop&w=800&q=80',
+      image: '/custom_gift_basket_img.jpg',
       description: 'A custom Winnipeg gift basket assembled for your occasion.',
       tags: ['Custom', 'Handpicked'],
       contents: customItems.map((item) => item.name),
@@ -181,16 +129,18 @@ function App() {
       try {
         setIsLoadingData(true);
         setErrorMsg(null);
-        const [catData, basketData, zoneData] = await Promise.all([
+        const [catData, basketData, zoneData, addonData] = await Promise.all([
           apiClient.getCategories(),
           apiClient.getBaskets(),
-          apiClient.getZones()
+          apiClient.getZones(),
+          apiClient.getAddons(),  
         ]);
         setCategories(catData);
         setBaskets(basketData);
         setZones(zoneData);
         // Safely set the first zone if one exists.
         if (zoneData.length > 0) setSelectedZone(zoneData[0]);
+        setCustomItems(addonData);
       } catch (err: any) {
         console.error('Error fetching catalog data:', err);
         setErrorMsg('Unable to load gift baskets. Please check if the API and database are running.');

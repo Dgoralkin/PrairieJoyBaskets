@@ -39,14 +39,15 @@ function App() {
   const [zones, setZones] = useState<Zone[]>([]);                                   // State to hold the list of delivery zones fetched from the API
   const [selectedZone, setSelectedZone] = useState<Zone | undefined>(undefined);    // State to hold the currently selected delivery zone
   
-  const [customItems, setCustomItems] = useState<Addon[]>([]);                      // State to hold the list of available addons/products for custom baskets
+  const [catalogItems, setCatalogItems] = useState<Addon[]>([]);                    // State to hold the list of available addons/products for custom baskets
   const [baskets, setBaskets] = useState<Basket[]>([]);                             // State to hold the list of baskets fetched from the API
   const [categories, setCategories] = useState<Category[]>([]);                     // State to hold the list of categories fetched from the API
   const [categoryFilter, setCategoryFilter] = useState<string>('All');              // State to hold the currently selected category filter
-  
+  const [selectedAddons, setSelectedAddons] = useState<string[]>([]);
+
   const [cart, setCart] = useState<CartItem[]>([]);                                 // State to hold the items currently in the shopping cart
 
-  const [customBasketName, setCustomBasketName] = useState('My Winnipeg Custom Basket');
+  const [customBasketName, setCustomBasketName] = useState('My Lovely Custom Basket');
   
   const [corpForm, setCorpForm] = useState<CorpForm>(corpFormTemplate);             // State to hold the current values of the corporate order form
   const [corpSubmitted, setCorpSubmitted] = useState(false);                        // State to track whether the corporate order form has been successfully submitted  const [errorMsg, setErrorMsg] = useState<string | null>(null);                    // State to hold any error messages encountered during data fetching
@@ -66,6 +67,16 @@ function App() {
     return baskets.filter((basket) => basket.category === categoryFilter);
   }, [baskets, categoryFilter]);
 
+  // Helper that returns the full Addon/catalogItems objects currently selected
+  const customItems = catalogItems.filter((a) => selectedAddons.includes(a.id));
+  // Toggle an add‑on by its id
+  const toggleAddon = (id: string) => {
+    setSelectedAddons((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
+  };
+
+  // Function to add an item to the cart, incrementing quantity if it already exists
   const addToCart = (item: Basket) => {
     setCart((prev) => {
       const existing = prev.find((entry) => entry.id === item.id);
@@ -79,10 +90,12 @@ function App() {
     });
   };
 
+  // Function to remove an item from the cart by its ID
   const removeFromCart = (id: string) => {
     setCart((prev) => prev.filter((item) => item.id !== id));
   };
 
+  // Function to update the quantity of an item in the cart by its ID and a delta value
   const updateQty = (id: string, delta: number) => {
     setCart((prev) =>
       prev
@@ -97,6 +110,7 @@ function App() {
     );
   };
 
+  // Function to add a custom basket to the cart, calculating its total price based on selected addons
   const addCustomBasketToCart = () => {
     const totalCustomPrice = 20 + customItems.reduce((sum, item) => sum + item.msrp, 0);
     const newCustomItem: CartItem = {
@@ -120,8 +134,18 @@ function App() {
     setIsCustomBuilderOpen(false);
   };
 
+  // Calculate the total price and total quantity of items in the cart
   const cartTotal = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
   const cartCount = cart.reduce((sum, item) => sum + item.qty, 0);
+
+  // Helper that returns a safe “fallback” zone when the real one isn’t loaded yet.
+  // You can keep this in the component body (just above the JSX) or in a separate utils file.
+  const safeZone: Zone = selectedZone ?? {
+    id: '',
+    name: '',
+    price: 0,
+    estDays: '',
+  };
 
   // Load categories & catalog baskets from Cloud SQL via API call.
   useEffect(() => {
@@ -135,12 +159,11 @@ function App() {
           apiClient.getZones(),
           apiClient.getAddons(),  
         ]);
-        setCategories(catData);
-        setBaskets(basketData);
-        setZones(zoneData);
-        // Safely set the first zone if one exists.
-        if (zoneData.length > 0) setSelectedZone(zoneData[0]);
-        setCustomItems(addonData);
+        setCategories(catData);                                                   // Set categories from API response
+        setBaskets(basketData);                                                   // Set baskets from API response
+        setZones(zoneData);                                                       // Set delivery zones from API response
+        if (zoneData.length > 0) setSelectedZone(zoneData[0]);                    // Safely set the first zone if one exists.
+        setCatalogItems(addonData);                                                // Set available addons/products for custom baskets from API response
       } catch (err: any) {
         console.error('Error fetching catalog data:', err);
         setErrorMsg('Unable to load gift baskets. Please check if the API and database are running.');
@@ -245,6 +268,56 @@ function App() {
         </div>
       </header>
 
+      <section className="relative overflow-hidden border-b border-cream-200 bg-gradient-to-b from-amber-50 to-cream-50 py-12 lg:py-16">
+        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-8 px-4 sm:px-6 md:flex-row lg:px-8">
+          <div className="max-w-xl space-y-4 text-center md:text-left">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800">
+              <Sparkles className="h-3.5 w-3.5" />
+              100% Handcrafted Manitoba Products
+            </span>
+            <h2 className="font-serif text-3xl font-bold leading-tight text-slate-900 sm:text-4xl lg:text-5xl">
+              Thoughtful Gifts, Delivered Fresh in Winnipeg
+            </h2>
+            <p className="text-sm leading-relaxed text-slate-600 sm:text-base">
+              Celebrate birthdays, team milestones, and holiday seasons with locally sourced artisan cheeses, craft beverages, and prairie delights.
+            </p>
+            <div className="flex flex-wrap items-center justify-center gap-3 pt-2 md:justify-start">
+              <button
+                onClick={() => setIsCustomBuilderOpen(true)}
+                className="flex items-center gap-2 rounded-xl bg-amber-600 px-5 py-3 text-sm font-semibold text-white shadow-md shadow-amber-600/20 transition hover:bg-amber-700"
+              >
+                <Wand2 className="h-4 w-4" />
+                Build Your Own Custom Basket
+              </button>
+              <button
+                onClick={() => setIsCorporateDrawerOpen(true)}
+                className="rounded-xl border border-cream-200 bg-white px-5 py-3 text-sm font-semibold text-slate-800 transition hover:bg-cream-100 sm:hidden"
+              >
+                Corporate Bulk Quotes
+              </button>
+            </div>
+          </div>
+
+          <div className="relative w-full max-w-md md:w-1/2">
+            <div className="aspect-4/3 overflow-hidden rounded-2xl border-4 border-white shadow-2xl">
+              <img
+                src="/custom_gift_basket_img.jpg"
+                alt="Winnipeg Gift Basket"
+                className="h-full w-full object-cover"
+              />
+            </div>
+            <div className="absolute -bottom-4 -left-4 flex items-center gap-3 rounded-xl border border-cream-200 bg-white p-3 shadow-lg">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-100 text-xs font-bold text-amber-800">
+                4.9 ★
+              </div>
+              <div className="text-xs">
+                <p className="font-bold text-slate-900">Over 1,200+ Delivered</p>
+                <p className="text-slate-500">Trusted by local corporations</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
 
 
       {/* Shop by Category - Insert baskets from Postgre DB here !*/}
@@ -350,6 +423,298 @@ function App() {
           </div>
         )}
       </main>
+
+
+      {isCustomBuilderOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm">
+          <div className="flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
+            <div className="flex items-center justify-between bg-amber-900 p-5 text-white">
+              <div className="flex items-center gap-2">
+                <Wand2 className="h-5 w-5 text-amber-400" />
+                <h3 className="font-serif text-lg font-bold">Custom Gift Basket Studio</h3>
+              </div>
+              <button onClick={() => setIsCustomBuilderOpen(false)} className="text-amber-200 hover:text-white">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="flex-grow space-y-6 overflow-y-auto p-6">
+              <div>
+                <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-700">Basket Title</label>
+                <input
+                  type="text"
+                  value={customBasketName}
+                  onChange={(event) => setCustomBasketName(event.target.value)}
+                  className="w-full rounded-xl border border-cream-200 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+                />
+                <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-700 mt-4">Add items to your custom basket</label>
+              </div>
+
+              {/* Add‑on selector – starts with nothing selected */}
+              <div className="grid grid-cols-2 gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {catalogItems.map((addon) => {
+                  const isSelected = selectedAddons.includes(addon.id);
+                  return (
+                    <button
+                      key={addon.id}
+                      type="button"
+                      className={`
+                        flex flex-col items-center rounded-lg border p-2
+                        ${isSelected ? 'border-amber-600 bg-amber-100' : 'border-gray-300'}
+                        hover:border-amber-500
+                      `}
+                      onClick={() => toggleAddon(addon.id)}
+                    >
+                      <span className="font-medium">{addon.name}</span>
+                      {/* An icon or image for the addon, placeholder */}
+                      <div className="mb-1 h-12 w-12 rounded-full bg-cream-200 flex items-center justify-center text-amber-600">
+                        <img src={addon.image_url || '/Add-on-item-placeholder.png'} alt={addon.name} className="h-full w-full object-cover" />
+                      </div>
+                      <span className="text-sm text-slate-600">
+                        ${addon.msrp.toFixed(2)}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="space-y-2 rounded-xl bg-cream-100 p-4">
+                <div className="flex justify-between text-xs text-slate-600">
+                  <span>Handcrafted Cedar Box &amp; Packaging Fee:</span>
+                  <span className="font-semibold">$20 CAD</span>
+                </div>
+
+                <div className="flex justify-between text-xs text-slate-600">
+                  <span>
+                    Selected Addons ({customItems.length}):
+                  </span>
+                  <span className="font-semibold">
+                    ${customItems.reduce((sum, item) => sum + item.msrp, 0)} CAD
+                  </span>
+                </div>
+
+                {/* list the names of selected add‑ons */}
+                {customItems.length > 0 && (
+                  <ul className="mt-2 list-disc pl-5 text-xs text-slate-600">
+                    {customItems.map((item) => (
+                      <li key={item.id}>{item.name} – ${item.msrp}</li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 border-t border-cream-200 bg-cream-50 p-4">
+              <button onClick={() => setIsCustomBuilderOpen(false)} className="rounded-xl px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-cream-200">
+                Cancel
+              </button>
+              <button
+                onClick={addCustomBasketToCart}
+                disabled={catalogItems.length === 0}
+                className="rounded-xl bg-amber-600 px-5 py-2.5 text-xs font-semibold text-white transition hover:bg-amber-700 disabled:opacity-50"
+              >
+                Add Custom Basket to Order
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isCartOpen && (
+        <div className="fixed inset-0 z-50 flex justify-end bg-slate-900/50 backdrop-blur-sm">
+          <div className="flex h-full w-full max-w-md flex-col bg-white shadow-2xl">
+            <div className="flex items-center justify-between border-b border-cream-200 p-5">
+              <div className="flex items-center gap-2">
+                <ShoppingBag className="h-5 w-5 text-amber-600" />
+                <h3 className="font-serif text-lg font-bold text-slate-900">Your Basket Order</h3>
+              </div>
+              <button onClick={() => setIsCartOpen(false)} className="text-slate-400 hover:text-slate-600">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="flex-grow space-y-4 overflow-y-auto p-5">
+              {cart.length === 0 ? (
+                <div className="space-y-3 py-12 text-center">
+                  <ShoppingCart className="mx-auto h-12 w-12 text-cream-200" />
+                  <p className="text-sm font-medium text-slate-500">Your cart is currently empty.</p>
+                </div>
+              ) : (
+                cart.map((item) => (
+                  <div key={item.id} className="flex items-center gap-3 rounded-xl border border-cream-200 bg-cream-50 p-3">
+                    <div className="flex-grow">
+                      <h5 className="text-xs font-bold text-slate-900">{item.title}</h5>
+                      <span className="text-xs font-semibold text-amber-800">${item.price} CAD</span>
+                      {item.contents && (
+                        <p className="mt-1 truncate text-[10px] text-slate-500">{item.contents.join(', ')}</p>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-2 rounded-lg border border-cream-200 bg-white px-2 py-1">
+                      <button onClick={() => updateQty(item.id, -1)} className="text-slate-500 hover:text-slate-800">
+                        <Minus className="h-3 w-3" />
+                      </button>
+                      <span className="w-4 text-center text-xs font-bold text-slate-800">{item.qty}</span>
+                      <button onClick={() => updateQty(item.id, 1)} className="text-slate-500 hover:text-slate-800">
+                        <Plus className="h-3 w-3" />
+                      </button>
+                    </div>
+
+                    <button onClick={() => removeFromCart(item.id)} className="text-slate-400 hover:text-red-600">
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+
+            {cart.length > 0 && (
+              <div className="space-y-4 border-t border-cream-200 bg-cream-50/50 p-5">
+                <div className="space-y-1">
+                  <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500">Selected Delivery Area</label>
+                  <div className="flex justify-between rounded-lg border border-cream-200 bg-white p-2.5 text-xs font-medium text-slate-800">
+                    <span>{safeZone.name}</span>
+                    <span className="font-bold text-amber-800">${safeZone.price} CAD</span>
+                  </div>
+                </div>
+
+                <div className="space-y-1.5 border-t border-cream-200 pt-2 text-xs text-slate-600">
+                  <div className="flex justify-between">
+                    <span>Subtotal</span>
+                    <span className="font-semibold text-slate-800">${cartTotal} CAD</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Winnipeg Local Delivery</span>
+                    <span className="font-semibold text-slate-800">${safeZone.price} CAD</span>
+                  </div>
+                  <div className="flex justify-between border-t border-cream-200 pt-2 text-sm font-bold text-slate-900">
+                    <span>Total</span>
+                    <span>${cartTotal + safeZone.price} CAD</span>
+                  </div>
+                </div>
+
+                <button className="w-full rounded-xl bg-amber-600 px-4 py-3 text-xs font-bold text-white shadow-md shadow-amber-600/20 transition hover:bg-amber-700">
+                  Proceed to Local Checkout
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {isCorporateDrawerOpen && (
+        <div className="fixed inset-0 z-50 flex justify-end bg-slate-900/60 backdrop-blur-sm">
+          <div className="flex h-full w-full max-w-lg flex-col bg-white shadow-2xl">
+            <div className="flex items-center justify-between bg-slate-900 p-5 text-white">
+              <div className="flex items-center gap-2">
+                <Building2 className="h-5 w-5 text-amber-400" />
+                <h3 className="font-serif text-lg font-bold">Corporate & Bulk B2B Orders</h3>
+              </div>
+              <button onClick={() => setIsCorporateDrawerOpen(false)} className="text-slate-400 hover:text-white">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="flex-grow overflow-y-auto p-6">
+              {corpSubmitted ? (
+                <div className="space-y-4 py-12 text-center">
+                  <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-green-100 text-green-700">
+                    <CheckCircle2 className="h-6 w-6" />
+                  </div>
+                  <h4 className="font-serif text-xl font-bold text-slate-900">Request Received!</h4>
+                  <p className="text-xs text-slate-600">
+                    Our Winnipeg corporate gifts team will prepare your Net-30 quote and contact you within 2 business hours.
+                  </p>
+                  <button
+                    onClick={() => {
+                      setCorpSubmitted(false);
+                      setIsCorporateDrawerOpen(false);
+                    }}
+                    className="rounded-xl bg-slate-900 px-4 py-2 text-xs font-semibold text-white"
+                  >
+                    Back to Shop
+                  </button>
+                </div>
+              ) : (
+                <form
+                  onSubmit={(event) => {
+                    event.preventDefault();
+                    setCorpSubmitted(true);
+                  }}
+                  className="space-y-4"
+                >
+                  <p className="text-xs leading-relaxed text-slate-600">
+                    Sending gifts to 10+ clients or employees? We offer custom branded ribbons, CSV address batch uploads, and Net-30 invoicing.
+                  </p>
+
+                  <div>
+                    <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-slate-700">Company Name</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="Acme Corp Canada"
+                      value={corpForm.companyName}
+                      onChange={(event) => setCorpForm({ ...corpForm, companyName: event.target.value })}
+                      className="w-full rounded-xl border border-cream-200 px-3.5 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-amber-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-slate-700">Business Contact Email</label>
+                    <input
+                      type="email"
+                      required
+                      placeholder="corporate@acme.ca"
+                      value={corpForm.contactEmail}
+                      onChange={(event) => setCorpForm({ ...corpForm, contactEmail: event.target.value })}
+                      className="w-full rounded-xl border border-cream-200 px-3.5 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-amber-500"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-slate-700">Estimated Quantity</label>
+                      <input
+                        type="number"
+                        min="5"
+                        value={corpForm.quantity}
+                        onChange={(event) => setCorpForm({ ...corpForm, quantity: Number(event.target.value) })}
+                        className="w-full rounded-xl border border-cream-200 px-3.5 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-amber-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-slate-700">Target Delivery Date</label>
+                      <input
+                        type="date"
+                        required
+                        value={corpForm.deliveryDate}
+                        onChange={(event) => setCorpForm({ ...corpForm, deliveryDate: event.target.value })}
+                        className="w-full rounded-xl border border-cream-200 px-3.5 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-amber-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-slate-700">Special Branding or Notes</label>
+                    <textarea
+                      rows={3}
+                      placeholder="e.g. Include custom logo greeting cards or specific diet restrictions..."
+                      value={corpForm.notes}
+                      onChange={(event) => setCorpForm({ ...corpForm, notes: event.target.value })}
+                      className="w-full rounded-xl border border-cream-200 px-3.5 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-amber-500"
+                    />
+                  </div>
+
+                  <button type="submit" className="w-full rounded-xl bg-slate-900 px-4 py-3 text-xs font-bold text-white shadow-md transition hover:bg-slate-800">
+                    Request Corporate Quote
+                  </button>
+                </form>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
 
       <footer className="mt-auto border-t border-slate-800 bg-slate-900 py-10 text-xs text-cream-200">

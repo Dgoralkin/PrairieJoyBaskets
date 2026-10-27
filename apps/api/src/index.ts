@@ -145,20 +145,43 @@ app.get('/api/v1/zones', async (_req, res) => {
     }
 });
 
-// GET /api/v1/addons - Returns catalog products (addons) with their prices and categories
+// GET /api/v1/addons - Returns catalog products (addons) with their names, prices, and signed image URLs
 app.get('/api/v1/addons', async (_req, res) => {
     try {
         const result = await pool.query(`
-            SELECT id, name, category, msrp, cost, is_active
+            SELECT
+                id,
+                name,
+                image_url,
+                category,
+                msrp,
+                cost,
+                is_active
             FROM catalog_products
             ORDER BY id ASC;
         `);
-        res.json(result.rows);
+
+        // Generate signed URLs for addon images concurrently
+        const addonsWithSignedImages = await Promise.all(
+            result.rows.map(async (addon: any) => {
+                const signedImage = await getSignedImageUrl(addon.image_url);
+
+                return {
+                    ...addon,
+                    image_url: signedImage,
+                };
+            })
+        );
+
+        res.json(addonsWithSignedImages);
     } catch (error) {
         console.error('Failed to fetch catalog products / addons:', error);
-        res.status(500).json({ error: 'Failed to fetch catalog products / addons' });
+        res.status(500).json({
+            error: 'Failed to fetch catalog products / addons'
+        });
     }
 });
+
 
 app.listen(Number(port), '0.0.0.0', () => {
     console.log(`Backend server Prairie Joy Baskets is listening on port ${port}`);

@@ -40,6 +40,7 @@ export interface Zone {
 export interface Addon {
     id: string;
     name: string;
+    image_url: string;
     category: string;
     msrp: number;
     cost: number;

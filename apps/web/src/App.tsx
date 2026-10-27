@@ -17,14 +17,7 @@ import {
 } from 'lucide-react';
 import { apiClient } from '@repo/api-client';
 import type { Basket, Category, CartItem, Zone, Addon, CorpForm } from '@repo/types';
-
-/*
-type CartItem = Basket & {
-  qty: number;
-  isCustom?: boolean;
-  contents?: string[];
-};
-*/
+import CustomBasketVideo from './components/CustomBasketVideo';
 
 // Define a template for the corporate order form with default values
 const corpFormTemplate: CorpForm = {
@@ -43,7 +36,7 @@ function App() {
   const [baskets, setBaskets] = useState<Basket[]>([]);                             // State to hold the list of baskets fetched from the API
   const [categories, setCategories] = useState<Category[]>([]);                     // State to hold the list of categories fetched from the API
   const [categoryFilter, setCategoryFilter] = useState<string>('All');              // State to hold the currently selected category filter
-  const [selectedAddons, setSelectedAddons] = useState<string[]>([]);
+  const [selectedAddons, setSelectedAddons] = useState<string[]>([]);               // State to hold the IDs of the currently selected addons for a custom basket
 
   const [cart, setCart] = useState<CartItem[]>([]);                                 // State to hold the items currently in the shopping cart
 
@@ -132,6 +125,7 @@ function App() {
 
     setCart((prev) => [...prev, newCustomItem]);
     setIsCustomBuilderOpen(false);
+    setSelectedAddons([]);
   };
 
   // Calculate the total price and total quantity of items in the cart
@@ -439,15 +433,18 @@ function App() {
             </div>
 
             <div className="flex-grow space-y-6 overflow-y-auto p-6">
+              {/* Import and render the CustomBasketVideo component at the top of the custom basket builder drawer */}
+              <CustomBasketVideo />
+
               <div>
-                <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-700">Basket Title</label>
+                <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-amber-600">Name Your Basket</label>
                 <input
                   type="text"
                   value={customBasketName}
                   onChange={(event) => setCustomBasketName(event.target.value)}
                   className="w-full rounded-xl border border-cream-200 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
                 />
-                <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-700 mt-4">Add items to your custom basket</label>
+                <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-amber-600 mt-4">Add items to your custom basket</label>
               </div>
 
               {/* Add‑on selector – starts with nothing selected */}
@@ -546,7 +543,16 @@ function App() {
                       <h5 className="text-xs font-bold text-slate-900">{item.title}</h5>
                       <span className="text-xs font-semibold text-amber-800">${item.price} CAD</span>
                       {item.contents && (
-                        <p className="mt-1 truncate text-[10px] text-slate-500">{item.contents.join(', ')}</p>
+                        <ul className="mt-1 space-y-0.5 text-[10px] text-slate-500">
+                          {item.contents.map((c, idx) => (
+                            <li key={idx} className="flex justify-between">
+                              <span className="flex items-center gap-2 truncate">
+                                <Check size={24} color="green" />
+                                {c}
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
                       )}
                     </div>
 
@@ -623,7 +629,7 @@ function App() {
                   </div>
                   <h4 className="font-serif text-xl font-bold text-slate-900">Request Received!</h4>
                   <p className="text-xs text-slate-600">
-                    Our Winnipeg corporate gifts team will prepare your Net-30 quote and contact you within 2 business hours.
+                    Our Winnipeg corporate gifts team will prepare your Net-30 quote and contact you within several business hours.
                   </p>
                   <button
                     onClick={() => {

@@ -1,3 +1,7 @@
+// Header.tsx is a React component that renders the header section of the web application.
+// It includes the brand logo, corporate orders button, cart icon with item count, and a delivery zone selector.
+// The component receives various state variables and their setters as props to manage the state of the header elements.
+
 import { Building2, MapPin, ShoppingCart} from 'lucide-react';
 import { Zone, CartItem } from '@repo/types';
 
@@ -25,24 +29,17 @@ type HeaderProps = {
 };
 
 export default function Header({
-  isCorporateDrawerOpen,
   setIsCorporateDrawerOpen,
-  isCartOpen,
   setIsCartOpen,
-  isCustomBuilderOpen,
-  setIsCustomBuilderOpen,
-  categoryFilter,
   setCategoryFilter,
   selectedZone,
   setSelectedZone,
   zones,
-  cart,
-  setCart,
+  cart
 }: HeaderProps) {
     const cartCount = cart.reduce((sum, item) => sum + item.qty, 0);
 
     return (
-
         <header className="sticky top-0 z-30 border-b border-cream-200 bg-cream-50/90 backdrop-blur-md">
             <div className="mx-auto max-w-7xl px-4 py-2.5 sm:px-6 lg:px-8">
 
@@ -121,5 +118,5 @@ export default function Header({
 
             </div>
         </header>
-    )
+    );
 }

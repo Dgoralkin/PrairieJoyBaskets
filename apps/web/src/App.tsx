@@ -105,7 +105,7 @@ function App() {
 
   // Function to add a custom basket to the cart, calculating its total price based on selected addons
   const addCustomBasketToCart = () => {
-    const totalCustomPrice = 20 + customItems.reduce((sum, item) => sum + item.msrp, 0);
+    const totalCustomPrice = 9.99 + customItems.reduce((sum, item) => sum + item.msrp, 0);
     const newCustomItem: CartItem = {
       id: `custom-${Date.now()}`,
       title: customBasketName,

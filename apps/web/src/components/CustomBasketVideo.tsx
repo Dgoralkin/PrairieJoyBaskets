@@ -8,11 +8,11 @@ export default function CustomBasketVideo({ className = '' }: { className?: stri
       loop
       playsInline
       preload="metadata"
-      poster="/hero_clip/prairie-joy-baskets-poster.jpg"
+      poster="/custom_basket_clip/prairie-joy-baskets-poster.jpg"
       aria-label="How Prairie Joy baskets are collected, assembled and delivered"
     >
-      <source src="/hero_clip/prairie-joy-baskets-promo.webm" type="video/webm" />
-      <source src="/hero_clip/prairie-joy-baskets-promo.mp4" type="video/mp4" />
+      <source src="/custom_basket_clip/prairie-joy-baskets-promo.webm" type="video/webm" />
+      <source src="/custom_basket_clip/prairie-joy-baskets-promo.mp4" type="video/mp4" />
     </video>
   );
 }

@@ -28,6 +28,7 @@ export type CartItem = Omit<Basket, 'categoryId' | 'isActive'> & {
     isActive?: boolean;
     isCustom?: boolean;
     contents?: string[];
+    pricedContents?: { name: string; price: number }[];
 };
 
 export interface Zone {
@@ -54,4 +55,3 @@ export interface CorpForm {
     deliveryDate: string;
     notes: string;
 }
-

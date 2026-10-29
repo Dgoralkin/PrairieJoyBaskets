@@ -23,8 +23,6 @@ type HeaderProps = {
   setSelectedZone: React.Dispatch<React.SetStateAction<Zone | undefined>>;
 
   cart: CartItem[]; 
-  setCart: React.Dispatch<React.SetStateAction<CartItem[]>>;
-
   zones: Zone[];
 };
 

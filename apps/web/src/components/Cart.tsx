@@ -86,7 +86,7 @@ export default function Cart({
                               </span>
                               {item.pricedContents?.[idx] && (
                                 <span className="whitespace-nowrap font-semibold">
-                                  ${item.pricedContents[idx].price.toFixed(2)} CAD
+                                  ${item.pricedContents[idx].price.toFixed(2)}
                                 </span>
                               )}
                             </li>

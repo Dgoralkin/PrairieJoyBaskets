@@ -149,7 +149,7 @@ export default function Cart({
                   </div>
                 </div>
 
-                <button className="w-full rounded-xl bg-amber-600 px-4 py-3 text-xs font-bold text-white shadow-md shadow-amber-600/20 transition hover:bg-amber-700">
+                <button onClick={() => console.log("Proceed to Local Checkout - pressed!")} className="w-full rounded-xl bg-amber-600 px-4 py-3 text-xs font-bold text-white shadow-md shadow-amber-600/20 transition hover:bg-amber-700">
                   Proceed to Local Checkout
                 </button>
               </div>

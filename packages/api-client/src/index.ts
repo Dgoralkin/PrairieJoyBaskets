@@ -1,7 +1,7 @@
 // This file is part of the PrairieJoyBaskets project and provides an API client for interacting with the backend services.
 // It includes methods to fetch categories and baskets from the API.
 
-import type { Basket, Category, Zone, Addon } from '@repo/types';
+import type { Basket, Category, Zone, Addon, CorpForm } from '@repo/types';
 
 export class PrairieJoyClient {
 
@@ -38,6 +38,16 @@ export class PrairieJoyClient {
         const res = await fetch('/api/v1/addons');
         if (!res.ok) throw new Error(`Failed to fetch addons: ${res.statusText}`);
         return res.json();
+    }
+
+    // Helper method to insert corporate orders form into the DB
+    async submitCorporateOrder(order: CorpForm): Promise<void> {
+        const res = await fetch('/api/v1/submit_corpform', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(order),
+        });
+        if (!res.ok) throw new Error(`Failed to submit corporate order: ${res.statusText}`);
     }
 }
 

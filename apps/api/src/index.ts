@@ -6,7 +6,7 @@ import express from 'express';
 import cors from 'cors';
 import { Storage } from '@google-cloud/storage';
 import { pool } from './db.js';
-import type { Basket, Category } from '@repo/types';
+import type { Basket, Category, CorpForm } from '@repo/types';
 
 const app = express();
 const port = process.env.PORT || 8080;
@@ -181,6 +181,61 @@ app.get('/api/v1/addons', async (_req, res) => {
         });
     }
 });
+
+// POST /api/v1/corporate_orders
+app.post('/api/v1/submit_corpform', async (req, res) => {
+    const body: unknown = req.body;
+    if (!body || typeof body !== 'object') {
+        res.status(400).json({ error: 'Invalid corporate order.' });
+        return;
+    }
+
+    const { companyName, contactEmail, quantity, deliveryDate, notes } =
+        body as Partial<CorpForm>;
+    const parsedDeliveryDate =
+        typeof deliveryDate === 'string' ? Date.parse(`${deliveryDate}T00:00:00.000Z`) : NaN;
+    const isValidDeliveryDate =
+        Number.isFinite(parsedDeliveryDate) &&
+        new Date(parsedDeliveryDate).toISOString().slice(0, 10) === deliveryDate;
+
+    if (
+        typeof companyName !== 'string' ||
+        !companyName.trim() ||
+        typeof contactEmail !== 'string' ||
+        !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactEmail) ||
+        typeof quantity !== 'number' ||
+        !Number.isInteger(quantity) ||
+        quantity < 5 ||
+        !isValidDeliveryDate ||
+        (notes !== undefined && typeof notes !== 'string')
+    ) {
+        res.status(400).json({ error: 'Invalid corporate order.' });
+        return;
+    }
+
+    try {
+        await pool.query(`
+            INSERT INTO corporate_orders
+            (company_name, contact_email, quantity, delivery_date, notes)
+            VALUES ($1, $2, $3, $4, $5);
+        `, [companyName.trim(), contactEmail, quantity, deliveryDate, notes ?? '']);
+        res.status(201).json({ message: 'Corporate order submitted.' });
+    } catch (error) {
+        console.error('Failed to post corporate order:', error);
+        res.status(500).json({
+            error: 'Failed to post corporate order.'
+        });
+    }
+});
+
+
+
+
+
+
+
+
+
 
 
 app.listen(Number(port), '0.0.0.0', () => {

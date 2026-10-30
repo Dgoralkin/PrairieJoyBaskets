@@ -4,6 +4,7 @@
 import { Building2, CheckCircle2, X} from 'lucide-react';
 import type { CorpForm } from "@repo/types";
 import { useState } from 'react';
+import { apiClient } from '@repo/api-client';
 
 // Define a template for the corporate order form with default values
 const corpFormTemplate: CorpForm = {
@@ -30,6 +31,23 @@ export default function CorporateOrders({
     setCorpSubmitted
 }: CorporateOrdersProps) {
     const [corpForm, setCorpForm] = useState<CorpForm>(corpFormTemplate);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [submitError, setSubmitError] = useState<string | null>(null);
+
+    // Helper method to insert a new corporate form into the DB via API POST request.
+    const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        setIsSubmitting(true);
+        setSubmitError(null);
+        try {
+            await apiClient.submitCorporateOrder(corpForm);
+            setCorpSubmitted(true);
+        } catch (error) {
+            setSubmitError(error instanceof Error ? error.message : 'Failed to submit corporate order.');
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
 
     return IsCorporateDrawerOpen ? (
         <div className="fixed inset-0 z-50 flex justify-end bg-slate-900/60 backdrop-blur-sm">
@@ -66,10 +84,7 @@ export default function CorporateOrders({
                     </div>
                 ) : (
                     <form
-                    onSubmit={(event) => {
-                        event.preventDefault();
-                        setCorpSubmitted(true);
-                    }}
+                    onSubmit={handleSubmit}
                     className="space-y-4"
                     >
                     <p className="text-xs leading-relaxed text-slate-600">
@@ -134,8 +149,11 @@ export default function CorporateOrders({
                         className="w-full rounded-xl border border-cream-200 px-3.5 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-amber-500"
                         />
                     </div>
-                    <button type="submit" className="w-full rounded-xl bg-slate-900 px-4 py-3 text-xs font-bold text-white shadow-md transition hover:bg-slate-800">
-                        Request Corporate Quote
+                    {submitError && (
+                        <p role="alert" className="text-xs text-red-700">{submitError}</p>
+                    )}
+                    <button type="submit" disabled={isSubmitting} className="w-full rounded-xl bg-slate-900 px-4 py-3 text-xs font-bold text-white shadow-md transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60">
+                        {isSubmitting ? 'Submitting...' : 'Request Corporate Quote'}
                     </button>
                     </form>
                 )}

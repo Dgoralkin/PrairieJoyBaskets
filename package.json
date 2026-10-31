@@ -24,7 +24,8 @@
     "typescript": "^7.0.2"
   },
   "dependencies": {
-    "@google-cloud/storage": "^8.4.0"
+    "@google-cloud/storage": "^8.4.0",
+    "@sendgrid/mail": "^8.1.6"
   },
   "pnpm": {
     "overrides": {

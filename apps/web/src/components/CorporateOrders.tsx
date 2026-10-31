@@ -33,6 +33,7 @@ export default function CorporateOrders({
     const [corpForm, setCorpForm] = useState<CorpForm>(corpFormTemplate);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submitError, setSubmitError] = useState<string | null>(null);
+    const [emailNotificationSent, setEmailNotificationSent] = useState(true);
 
     // Helper method to insert a new corporate form into the DB via API POST request.
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -40,7 +41,9 @@ export default function CorporateOrders({
         setIsSubmitting(true);
         setSubmitError(null);
         try {
-            await apiClient.submitCorporateOrder(corpForm);
+            const response = await apiClient.submitCorporateOrder(corpForm);
+            console.log("response: ", response);
+            setEmailNotificationSent(response.data.notificationSent);
             setCorpSubmitted(true);
         } catch (error) {
             setSubmitError(error instanceof Error ? error.message : 'Failed to submit corporate order.');
@@ -70,7 +73,9 @@ export default function CorporateOrders({
                         </div>
                         <h4 className="font-serif text-xl font-bold text-slate-900">Request Received!</h4>
                         <p className="text-xs text-slate-600">
-                            Our Winnipeg corporate gifts team will prepare your Net-30 quote and contact you within several business hours.
+                            {emailNotificationSent
+                                ? 'Our Winnipeg corporate gifts team will prepare your Net-30 quote and contact you within several business hours.'
+                                : 'Your request was recorded, but we could not send the team an email notification. Please contact us directly to ensure they see it.'}
                         </p>
                         <button
                             onClick={() => {

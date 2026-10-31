@@ -41,13 +41,21 @@ export class PrairieJoyClient {
     }
 
     // Helper method to insert corporate orders form into the DB
-    async submitCorporateOrder(order: CorpForm): Promise<void> {
+    async submitCorporateOrder(
+        order: CorpForm
+    ): Promise<{ status: number; data: { message: string; notificationSent: boolean } }> {
         const res = await fetch('/api/v1/submit_corpform', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(order),
         });
         if (!res.ok) throw new Error(`Failed to submit corporate order: ${res.statusText}`);
+        // Parse and return the JSON response
+        const responseData: { message: string; notificationSent: boolean } = await res.json();
+        return {
+            status: res.status,
+            data: responseData,
+        };
     }
 }
 

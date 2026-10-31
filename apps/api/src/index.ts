@@ -6,6 +6,7 @@ import express from 'express';
 import cors from 'cors';
 import { Storage } from '@google-cloud/storage';
 import { pool } from './db.js';
+import { sendCorporateOrderEmail } from './sendgrid.js';
 import type { Basket, Category, CorpForm } from '@repo/types';
 
 const app = express();
@@ -182,7 +183,7 @@ app.get('/api/v1/addons', async (_req, res) => {
     }
 });
 
-// POST /api/v1/corporate_orders
+// POST /api/v1/corporate_orders - Recieves and POST a corporate order form to the DB.
 app.post('/api/v1/submit_corpform', async (req, res) => {
     const body: unknown = req.body;
     if (!body || typeof body !== 'object') {
@@ -212,31 +213,43 @@ app.post('/api/v1/submit_corpform', async (req, res) => {
         res.status(400).json({ error: 'Invalid corporate order.' });
         return;
     }
-
+    // Insert corporate order passed via req into the DB @ pjb-web-db.corporate_orders
+    // Insert the corporate order before sending its notification.
     try {
-        await pool.query(`
+        const result = await pool.query(`
             INSERT INTO corporate_orders
             (company_name, contact_email, quantity, delivery_date, notes)
             VALUES ($1, $2, $3, $4, $5);
         `, [companyName.trim(), contactEmail, quantity, deliveryDate, notes ?? '']);
-        res.status(201).json({ message: 'Corporate order submitted.' });
+        console.log('Corporate order accepted by database:', result.rowCount);
     } catch (error) {
         console.error('Failed to post corporate order:', error);
         res.status(500).json({
             error: 'Failed to post corporate order.'
         });
+        return;
     }
+
+    // Send new inquiry email notification to admin and return confirmation notification
+    let notificationSent = true;
+    try {
+        await sendCorporateOrderEmail({
+            companyName: companyName.trim(),
+            contactEmail,
+            quantity,
+            deliveryDate,
+            notes: notes ?? '',
+        });
+    } catch (error) {
+        notificationSent = false;
+        console.error('Failed to send corporate order notification:', error);
+    }
+
+    res.status(201).json({
+        message: 'Corporate order submitted.',
+        notificationSent,
+    });
 });
-
-
-
-
-
-
-
-
-
-
 
 app.listen(Number(port), '0.0.0.0', () => {
     console.log(`Backend server Prairie Joy Baskets is listening on port ${port}`);

@@ -9,6 +9,7 @@
     },
     "dependencies": {
         "@google-cloud/storage": "^8.4.0",
+        "@sendgrid/mail": "^8.1.6",
         "@repo/types": "workspace:*",
         "cors": "^2.8.5",
         "dotenv": "^16.4.5",

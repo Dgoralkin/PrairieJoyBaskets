@@ -55,6 +55,3 @@ coverage/
 .Trashes
 ehthumbs.db
 Thumbs.db
-
-# Twillio / Sengrid API
-sendgrid.env

@@ -246,7 +246,7 @@ app.post('/api/v1/submit_corpform', async (req, res) => {
     }
 
     res.status(201).json({
-        message: 'Corporate order submitted.',
+        message: 'Corporate order submitted via Sendgrid.',
         notificationSent,
     });
 });

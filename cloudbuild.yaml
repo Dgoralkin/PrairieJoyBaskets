@@ -34,6 +34,8 @@ steps:
       - 'managed'
       - '--port'
       - '8080'
+      - '--service-account'
+      - 'cloud-sql-sa@prairiejoybaskets.iam.gserviceaccount.com'
       - '--allow-unauthenticated'
 
   # 2. Build Docker image for the frontend and push it to Artifact Registry

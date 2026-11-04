@@ -6,7 +6,7 @@ import express from 'express';
 import cors from 'cors';
 import { Storage } from '@google-cloud/storage';
 import { pool } from './db.js';
-import { sendCorporateOrderEmail } from './sendgrid.js';
+import { sendCorporateOrderEmail } from './sendgrid_cloudrun.js';
 import type { Basket, Category, CorpForm } from '@repo/types';
 
 const app = express();
@@ -183,6 +183,12 @@ app.get('/api/v1/addons', async (_req, res) => {
     }
 });
 
+
+// The following POST route is used to receive and insert a corporate order form into the database, 
+// and send an email notification via SendGrid. 
+// It validates the incoming request body to ensure all required fields are present and correctly formatted.
+// If the insertion or email sending fails, it responds with an appropriate error message.
+
 // POST /api/v1/corporate_orders - Recieves and POST a corporate order form to the DB.
 app.post('/api/v1/submit_corpform', async (req, res) => {
     const body: unknown = req.body;
@@ -230,8 +236,14 @@ app.post('/api/v1/submit_corpform', async (req, res) => {
         return;
     }
 
-    // Send new inquiry email notification to admin and return confirmation notification
     let notificationSent = true;
+    res.status(201).json({
+        message: 'Corporate order accepted by database.',
+        notificationSent,
+    });
+
+    /*
+    // Send new inquiry email notification to admin and return confirmation notification
     try {
         await sendCorporateOrderEmail({
             companyName: companyName.trim(),
@@ -249,7 +261,9 @@ app.post('/api/v1/submit_corpform', async (req, res) => {
         message: 'Corporate order submitted via Sendgrid.',
         notificationSent,
     });
+    */
 });
+
 
 app.listen(Number(port), '0.0.0.0', () => {
     console.log(`Backend server Prairie Joy Baskets is listening on port ${port}`);

@@ -20,6 +20,7 @@ flowchart TD
             WebRun["prairiejoy-web (Port 8080 - Nginx)"]
             ApiRun["prairiejoy-api (Port 8080 - Node/Express)"]
         end
+        EmailFunction["Cloud Functions Gen 2\ncorporate-orders-mail (IAM-only)"]
 
         subgraph Storage["Cloud Storage (GCS)"]
             GCS_Images["Catalog Images Bucket (gs://pjb-catalog-images)"]
@@ -43,6 +44,8 @@ flowchart TD
     ApiRun -->|Signed URLs / Image Assets| GCS_Images
     ApiRun -->|Database Credentials| SecretMgr
     ApiRun -.->|Identity & Permissions| IAM
+    ApiRun -->|HTTPS POST + ID token| EmailFunction
+    EmailFunction -->|SendGrid API key| SecretMgr
 ```
 
 ---
@@ -57,6 +60,8 @@ PJB_app/
 ├── turbo.json                 # Turborepo task pipeline caching configuration
 ├── cloudbuild.yaml            # GCP Cloud Build multi-service CI/CD deployment pipeline
 ├── Dockerfile                 # Root multi-stage container file for web app (Nginx on Cloud Run)
+├── cloud-functions/           # Standalone IAM-protected HTTP functions
+│   └── corporate-orders/      # Corporate-order SendGrid notification function
 ├── PROJECT_ARCHITECTURE.md    # System architecture and deployment specification
 │
 ├── apps/

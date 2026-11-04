@@ -20,7 +20,7 @@ flowchart TD
             WebRun["prairiejoy-web (Port 8080 - Nginx)"]
             ApiRun["prairiejoy-api (Port 8080 - Node/Express)"]
         end
-        EmailFunction["Cloud Functions Gen 2\ncorporate-orders-mail (IAM-only)"]
+        EmailRun["corporate-orders-mail\nCloud Run Function (IAM-only)"]
 
         subgraph Storage["Cloud Storage (GCS)"]
             GCS_Images["Catalog Images Bucket (gs://pjb-catalog-images)"]
@@ -44,8 +44,8 @@ flowchart TD
     ApiRun -->|Signed URLs / Image Assets| GCS_Images
     ApiRun -->|Database Credentials| SecretMgr
     ApiRun -.->|Identity & Permissions| IAM
-    ApiRun -->|HTTPS POST + ID token| EmailFunction
-    EmailFunction -->|SendGrid API key| SecretMgr
+    ApiRun -->|HTTPS POST + ID token| EmailRun
+    EmailRun -->|SendGrid API key| SecretMgr
 ```
 
 ---

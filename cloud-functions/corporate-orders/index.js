@@ -1,3 +1,6 @@
+// This Cloud Function handles corporate order requests and sends an email notification using SendGrid.
+// It is triggered by an HTTP POST request containing the order details in JSON format.
+
 const sgMail = require("@sendgrid/mail");
 
 function isValidOrder(order) {

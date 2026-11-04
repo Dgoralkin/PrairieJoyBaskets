@@ -6,7 +6,7 @@ import express from 'express';
 import cors from 'cors';
 import { Storage } from '@google-cloud/storage';
 import { pool } from './db.js';
-import { sendCorporateOrderEmail } from './sendgrid_cloudrun.js';
+import { sendCorporateOrderEmail } from './cloudrun-sendgrid.js';
 import type { Basket, Category, CorpForm } from '@repo/types';
 
 const app = express();
@@ -214,6 +214,7 @@ app.post('/api/v1/submit_corpform', async (req, res) => {
         res.status(400).json({ error: 'Invalid corporate order.' });
         return;
     }
+
     // Insert corporate order passed via req into the DB @ pjb-web-db.corporate_orders
     // Insert the corporate order before sending its notification.
     try {
@@ -231,23 +232,38 @@ app.post('/api/v1/submit_corpform', async (req, res) => {
         return;
     }
 
-    let notificationSent = true;
+    // Call the SendGrid Cloud Run function to send the corporate order email notification
+    // Return the notification response to the client, but do not fail the request if the email fails.
+    let notificationResponse: {
+        status: number;
+        data: { result?: string; error?: string };
+    } | null = null;
     try {
-        await sendCorporateOrderEmail({
+        notificationResponse = await sendCorporateOrderEmail({
             companyName: companyName.trim(),
             contactEmail,
             quantity,
             deliveryDate,
             notes: notes ?? '',
         });
+        if (notificationResponse.status < 200 || notificationResponse.status >= 300) {
+            console.error('Corporate order email function returned an error:', notificationResponse);
+        }
     } catch (error) {
-        notificationSent = false;
-        console.error('Failed to send corporate order notification:', error);
+        console.error('Failed to call corporate order email function:', error);
     }
 
+    // Determine if the email notification was sent successfully based on the response status
+    const notificationSent =
+        notificationResponse !== null &&
+        notificationResponse.status >= 200 &&
+        notificationResponse.status < 300;
     res.status(201).json({
-        message: 'Corporate order accepted by database.',
+        message: notificationSent
+            ? 'Corporate order accepted and email notification sent.'
+            : 'Corporate order accepted, but email notification failed.',
         notificationSent,
+        notificationResponse,
     });
 });
 

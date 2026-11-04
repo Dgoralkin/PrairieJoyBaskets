@@ -40,10 +40,21 @@ export class PrairieJoyClient {
         return res.json();
     }
 
-    // Helper method to insert corporate orders form into the DB
+    // Helper method to insert corporate orders form into the DB via API POST request and
+    // send an email notification to the corporate orders email address VIA SendGrid.
     async submitCorporateOrder(
         order: CorpForm
-    ): Promise<{ status: number; data: { message: string; notificationSent: boolean } }> {
+    ): Promise<{
+        status: number;
+        data: {
+            message: string;
+            notificationSent: boolean;
+            notificationResponse: {
+                status: number;
+                data: { result?: string; error?: string };
+            } | null;
+        };
+    }> {
         const res = await fetch('/api/v1/submit_corpform', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -51,7 +62,14 @@ export class PrairieJoyClient {
         });
         if (!res.ok) throw new Error(`Failed to submit corporate order: ${res.statusText}`);
         // Parse and return the JSON response
-        const responseData: { message: string; notificationSent: boolean } = await res.json();
+        const responseData: {
+            message: string;
+            notificationSent: boolean;
+            notificationResponse: {
+                status: number;
+                data: { result?: string; error?: string };
+            } | null;
+        } = await res.json();
         return {
             status: res.status,
             data: responseData,

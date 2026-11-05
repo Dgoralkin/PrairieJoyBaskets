@@ -6,7 +6,7 @@ import express from 'express';
 import cors from 'cors';
 import { Storage } from '@google-cloud/storage';
 import { pool } from './db.js';
-import { sendCorporateOrderEmail } from './cloudrun-sendgrid.js';
+import { callCloudRunFunc_COM } from './callCloudrunFunction_c-o-m.js';
 import type { Basket, Category, CorpForm } from '@repo/types';
 
 const app = express();
@@ -239,7 +239,7 @@ app.post('/api/v1/submit_corpform', async (req, res) => {
         data: { result?: string; error?: string };
     } | null = null;
     try {
-        notificationResponse = await sendCorporateOrderEmail({
+        notificationResponse = await callCloudRunFunc_COM({
             companyName: companyName.trim(),
             contactEmail,
             quantity,
@@ -266,7 +266,6 @@ app.post('/api/v1/submit_corpform', async (req, res) => {
         notificationResponse,
     });
 });
-// Latest ?
 
 
 app.listen(Number(port), '0.0.0.0', () => {

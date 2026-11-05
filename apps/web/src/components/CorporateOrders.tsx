@@ -34,6 +34,13 @@ export default function CorporateOrders({
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submitError, setSubmitError] = useState<string | null>(null);
     const [emailNotificationSent, setEmailNotificationSent] = useState(true);
+    const tomorrow_date = new Date();
+    tomorrow_date.setDate(tomorrow_date.getDate() + 1);
+    const minDeliveryDate = [
+        tomorrow_date.getFullYear(),
+        String(tomorrow_date.getMonth() + 1).padStart(2, '0'),
+        String(tomorrow_date.getDate()).padStart(2, '0'),
+    ].join('-');
 
     // Helper method to insert a new corporate form into the DB via API POST request.
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -52,7 +59,6 @@ export default function CorporateOrders({
         }
     };
 
-    // Latest ?
     return IsCorporateDrawerOpen ? (
         <div className="fixed inset-0 z-50 flex justify-end bg-slate-900/60 backdrop-blur-sm">
             <div className="flex h-full w-full max-w-lg flex-col bg-white shadow-2xl">
@@ -138,6 +144,7 @@ export default function CorporateOrders({
                             <input
                                 type="date"
                                 required
+                                min={minDeliveryDate}
                                 value={corpForm.deliveryDate}
                                 onChange={(event) => setCorpForm({ ...corpForm, deliveryDate: event.target.value })}
                                 className="w-full rounded-xl border border-cream-200 px-3.5 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-amber-500"

@@ -4,6 +4,7 @@
 
 import express from 'express';
 import cors from 'cors';
+import { randomUUID } from 'node:crypto';
 import { Storage } from '@google-cloud/storage';
 import { pool } from './db.js';
 import { callCloudRunFunc_COM } from './callCloudrunFunction_c-o-m.js';
@@ -220,9 +221,9 @@ app.post('/api/v1/submit_corpform', async (req, res) => {
     try {
         const result = await pool.query(`
             INSERT INTO corporate_orders
-            (company_name, contact_email, quantity, delivery_date, notes)
-            VALUES ($1, $2, $3, $4, $5);
-        `, [companyName.trim(), contactEmail, quantity, deliveryDate, notes ?? '']);
+            (id, company_name, contact_email, quantity, delivery_date, notes)
+            VALUES ($1, $2, $3, $4, $5, $6);
+        `, [`co${randomUUID()}`, companyName.trim(), contactEmail, quantity, deliveryDate, notes ?? '']);
         console.log('Corporate order accepted by database:', result.rowCount);
     } catch (error) {
         console.error('Failed to post corporate order:', error);

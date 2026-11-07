@@ -188,7 +188,7 @@ A single static external IP address fronts the platform. The URL map uses the mo
 ### 3.4 Corporate Order Execution Flow
 
 1. The browser sends `POST /api/v1/submit_corpform` to the load balancer, which routes it to `prairiejoy-api`.
-2. The API validates the request and inserts one row into `corporate_orders` in Cloud SQL.
+2. The API validates the request, assigns a unique `co`-prefixed UUID, and inserts one row into `corporate_orders` in Cloud SQL.
 3. After the insert succeeds, the API calls `callCloudRunFunc_COM`. The API runtime service account obtains an OIDC ID token for the canonical `corporate-orders-mail` `run.app` URL.
 4. The API sends the order by HTTPS POST to the load-balancer URL ending in `/api/v1/submit_email`, with the ID token attached. The load balancer routes this request through the function's Serverless NEG to the IAM-protected `corporate-orders-mail` service. The API runtime identity must have `roles/run.invoker` on that service.
 5. The email function validates the payload and sends the notification through SendGrid; it does not write to Cloud SQL.

@@ -8,7 +8,7 @@
 ### Execution flow
 
 1. The browser sends one `POST /api/v1/submit_corpform` request to the external Application Load Balancer. The `/api/*` route sends it to the `prairiejoy-api` Cloud Run service.
-2. The API validates the form and inserts one row into `corporate_orders` in Cloud SQL. A database error returns `500` and stops processing.
+2. The API validates the form, assigns a unique `co`-prefixed UUID, and inserts one row into `corporate_orders` in Cloud SQL. A database error returns `500` and stops processing.
 3. After the insert succeeds, the API calls `callCloudRunFunc_COM`. It obtains a Google-signed OIDC ID token using the API service's runtime service account, then posts the order through the load balancer.
 4. The load balancer routes `POST /api/v1/submit_email` to the IAM-protected `corporate-orders-mail` Cloud Run function. That function validates the order and sends the email through SendGrid; it does not insert a database row.
 5. The API responds with `201` and a `notificationSent` result. If email delivery fails, the saved order remains in the database and `notificationSent` is `false`.

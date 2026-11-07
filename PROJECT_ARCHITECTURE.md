@@ -2,6 +2,7 @@
 
 **Author:** Daniel Gorelkin - Dgoralkin@Github  
 **Description:** Prairie Joy Baskets app is a cloud-based full-stack (Cloud SQL Postgres based) monorepo application for a web and mobile B2B/B2C platform.
+**Deployment:** https://34.160.158.137.sslip.io/
 
 ---
 
@@ -35,16 +36,17 @@ flowchart TD
     end
 
     Client -->|HTTPS /| GLB
-    Client -->|HTTPS /api/*| GLB
+    Client -->|HTTPS POST /api/v1/submit_corpform| GLB
     
-    GLB -->|/* Web Traffic| WebRun
-    GLB -->|/api/* API Traffic| ApiRun
+    GLB -->|Default / Web Traffic| WebRun
+    GLB -->|/api/* except email route| ApiRun
+    GLB -->|/api/v1/submit_email via serverless NEG| EmailRun
     
     ApiRun -->|Unix Socket / Auth Proxy| CloudSQL
     ApiRun -->|Signed URLs / Image Assets| GCS_Images
     ApiRun -->|Database Credentials| SecretMgr
     ApiRun -.->|Identity & Permissions| IAM
-    ApiRun -->|HTTPS POST + ID token| EmailRun
+    ApiRun -->|HTTPS POST /api/v1/submit_email + OIDC ID token| GLB
     EmailRun -->|SendGrid API key| SecretMgr
 ```
 
@@ -151,11 +153,13 @@ PJB_app/
 
 ### 3.1 Global External Application Load Balancer (HTTPS)
 
-A single static external IP address fronts the entire platform with Google-managed SSL certificates:
+A single static external IP address fronts the platform. The URL map uses the most-specific matching path for the email function, then sends other API paths to the API service:
 
 - **Host and Path Routing (URL Map):**
-  - `/*` (Default Route): Directs to the `prairiejoy-web` Cloud Run service (or Backend Bucket with Cloud CDN).
-  - `/api/*`: Directs to the `prairiejoy-api` Cloud Run service via Serverless Network Endpoint Group (Serverless NEG).
+  - `/api/v1/submit_email`: Directs to `corporate-orders-mail` through its Serverless NEG.
+  - `/api/*`: Directs to the `prairiejoy-api` Cloud Run service through its Serverless NEG. The more-specific email route takes precedence.
+  - All unmatched paths: Direct to the `prairiejoy-web` Cloud Run service (or Backend Bucket with Cloud CDN).
+- **TLS:** The HTTPS frontend uses a certificate whose hostname matches the URL clients call. The development hostname `34.160.158.137.sslip.io` resolves to the load balancer IP; the optional Google-managed certificate `pjb-sslip-cert` must be `ACTIVE` before using it. Certificate issuance for shared dynamic DNS is not guaranteed; a controlled domain is preferred for production.
 - **CORS Elimination:** Because both frontend and backend share the exact same domain origin (e.g., `https://prairiejoybaskets.ca` and `https://prairiejoybaskets.ca/api/`), cross-origin resource sharing (CORS) complications are eliminated in production.
 
 ### 3.2 Database & Storage Configuration
@@ -180,6 +184,17 @@ A single static external IP address fronts the entire platform with Google-manag
     gcloud auth application-default login --impersonate-service-account=cloud-sql-sa@prairiejoybaskets.iam.gserviceaccount.com
     ```
 - **Secrets Management:** Database passwords and sensitive tokens are injected into Cloud Run directly via Google Cloud Secret Manager.
+
+### 3.4 Corporate Order Execution Flow
+
+1. The browser sends `POST /api/v1/submit_corpform` to the load balancer, which routes it to `prairiejoy-api`.
+2. The API validates the request and inserts one row into `corporate_orders` in Cloud SQL.
+3. After the insert succeeds, the API calls `callCloudRunFunc_COM`. The API runtime service account obtains an OIDC ID token for the canonical `corporate-orders-mail` `run.app` URL.
+4. The API sends the order by HTTPS POST to the load-balancer URL ending in `/api/v1/submit_email`, with the ID token attached. The load balancer routes this request through the function's Serverless NEG to the IAM-protected `corporate-orders-mail` service. The API runtime identity must have `roles/run.invoker` on that service.
+5. The email function validates the payload and sends the notification through SendGrid; it does not write to Cloud SQL.
+6. The API returns `201` with `notificationSent` and `notificationResponse`. A notification failure does not roll back the saved order.
+
+The two API paths must remain distinct. `CORPORATE_ORDERS_FUNCTION_URL` is the load-balancer URL ending in `/api/v1/submit_email`; it must not point to `/api/v1/submit_corpform`, which would invoke the form handler again and attempt another database insert. `CORPORATE_ORDERS_FUNCTION_URL_DIRECT` is the canonical `run.app` URL used only as the OIDC token audience. The load-balancer hostname and token audience serve different purposes.
 
 ---
 

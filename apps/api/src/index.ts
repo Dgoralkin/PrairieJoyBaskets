@@ -267,40 +267,6 @@ app.post('/api/v1/submit_corpform', async (req, res) => {
     });
 });
 
-import { GoogleAuth } from 'google-auth-library';
-
-// Debug endpoint in apps/api
-app.get('/api/debug-gcp-auth', async (req, res) => {
-    try {
-        const targetAudience = 'https://corporate-orders-mail-618983862687.northamerica-northeast1.run.app';
-        const auth = new GoogleAuth();
-        
-        // Check what credential type Google Auth is loading
-        const projectId = await auth.getProjectId();
-        console.log(`[DEBUG] Loaded Project ID: ${projectId}`);
-        
-        const client = await auth.getIdTokenClient(targetAudience);
-        
-        // Force the library to fetch the raw token right now
-        const token = await client.idTokenProvider.fetchIdToken(targetAudience);
-        
-        console.log(`[DEBUG] Token fetched successfully! Starts with: ${token.substring(0, 15)}...`);
-        
-        res.json({ 
-            success: true, 
-            projectId, 
-            tokenPreview: `${token.substring(0, 15)}...` 
-        });
-    } catch (error) {
-        console.error('[DEBUG] Authentication error:', error);
-        res.status(500).json({ 
-            success: false, 
-            error: error instanceof Error ? error.message : String(error),
-            stack: error instanceof Error ? error.stack : undefined
-        });
-    }
-});
-
 
 app.listen(Number(port), '0.0.0.0', () => {
     console.log(`Backend server Prairie Joy Baskets is listening on port ${port}`);
